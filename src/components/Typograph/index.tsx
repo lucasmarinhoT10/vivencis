@@ -36,27 +36,27 @@ const Typograph: React.FC<TypographProps> = ({
   const getFontFamily = () => {
     switch (fontWeight) {
       case '100':
-        return 'Inter_100Thin';
+        return 'Poppins_100Thin';
       case '200':
-        return 'Inter_200ExtraLight';
+        return 'Poppins_200ExtraLight';
       case '300':
-        return 'Inter_300Light';
+        return 'Poppins_300Light';
       case '400':
       case 'normal':
-        return 'Inter_400Regular';
+        return 'Poppins_400Regular';
       case '500':
-        return 'Inter_500Medium';
+        return 'Poppins_500Medium';
       case '600':
-        return 'Inter_600SemiBold';
+        return 'Poppins_600SemiBold';
       case '700':
       case 'bold':
-        return 'Inter_700Bold';
+        return 'Poppins_700Bold';
       case '800':
-        return 'Inter_800ExtraBold';
+        return 'Poppins_800ExtraBold';
       case '900':
-        return 'Inter_900Black';
+        return 'Poppins_900Black';
       default:
-        return 'Inter_400Regular';
+        return 'Poppins_400Regular';
     }
   };
 

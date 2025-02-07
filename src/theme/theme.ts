@@ -1,4 +1,3 @@
-// theme/theme.js
 import { Dimensions } from 'react-native';
 
 const { width } = Dimensions.get('window');
@@ -46,7 +45,6 @@ export const theme = {
       cardTertiary: '#08875D',
     },
     background: '#FFFF',
-
     surface: '#FFFFFF',
     error: {
       main: '#B00020',
@@ -61,7 +59,6 @@ export const theme = {
       secondary: '#4D4D4D',
       description: '#484C52',
       tertiary: '#4397B0',
-
       onPrimary: '#FFFFFF',
       onSecondary: '#000000',
       onTertiary: '#808080',
@@ -76,22 +73,27 @@ export const theme = {
     semiTitle: {
       fontSize: normalize(18),
       lineHeight: normalize(26),
+      fontFamily: 'Poppins_600Bold',
     },
     title: {
       fontSize: normalize(24),
       lineHeight: normalize(32),
+      fontFamily: 'Poppins_700Bold',
     },
     body: {
       fontSize: normalize(16),
       lineHeight: normalize(24),
+      fontFamily: 'Poppins_400Regular',
     },
     options: {
       fontSize: normalize(14),
       lineHeight: normalize(28),
+      fontFamily: 'Poppins_400Regular',
     },
     caption: {
       fontSize: normalize(12),
       lineHeight: normalize(16),
+      fontFamily: 'Poppins_400Regular',
     },
   },
   sizes: {
