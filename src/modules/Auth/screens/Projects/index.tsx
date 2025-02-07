@@ -1,0 +1,347 @@
+import React, { useEffect, useState } from 'react';
+import Container from '@components/Container';
+import {
+  ActivityIndicator,
+  Alert,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+
+import Spacer from '@components/Spacer';
+import { theme } from '@theme/theme';
+import Typograph from '@components/Typograph';
+import Input from '@components/Input';
+
+import { useNavigation } from '@react-navigation/native';
+
+import { RootDrawerParamList } from '@routes/routes';
+import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import ProjectCard from '@components/ProjectCard';
+import OrderButton from '@components/OrderButton';
+import { ListCardProjects } from '@components/ListCardProjects';
+import { fetchOrders, fetchProjects } from './services/project.services';
+import useProjectsStore from 'src/store/projectsStore';
+import useUserStore from 'src/store/userStore';
+import useOrdersStore from 'src/store/ordersStore';
+import { FilterModal } from '@components/FilterModal/Index';
+import { getStatus } from '../SignIn/services/login.services';
+import { PaginationOrders } from 'src/store/Models/Orders';
+import { MaterialIcons } from '@expo/vector-icons';
+import useTechniciansStore from 'src/store/techniciansStore';
+import { fetchTechnicians } from '../ManageTechnicians/services/technicians.services';
+const PaginationControls = ({
+  currentPage,
+  totalPages,
+  onNext,
+  onPrev,
+}: {
+  currentPage: number;
+  totalPages: number;
+  onNext: () => void;
+  onPrev: () => void;
+}) => {
+  return (
+    <View style={styles.paginationContainer}>
+      <TouchableOpacity
+        style={[
+          styles.paginationButton,
+          currentPage === 1 && styles.disabledButton,
+        ]}
+        onPress={onPrev}
+        disabled={currentPage === 1}
+      >
+        <MaterialIcons
+          size={20}
+          name="arrow-back-ios"
+          color={theme.colors.primary.labelValue}
+        />
+        <Typograph style={styles.paginationButtonText}>Anterior</Typograph>
+      </TouchableOpacity>
+      <Typograph style={styles.pageIndicator}>
+        {currentPage} de {totalPages}
+      </Typograph>
+      <TouchableOpacity
+        style={[
+          styles.paginationButton,
+          currentPage === totalPages && styles.disabledButton,
+        ]}
+        onPress={onNext}
+        disabled={currentPage === totalPages}
+      >
+        <Typograph style={styles.paginationButtonText}>Próximo</Typograph>
+        <MaterialIcons
+          size={20}
+          name="arrow-forward-ios"
+          color={theme.colors.primary.labelValue}
+        />
+      </TouchableOpacity>
+    </View>
+  );
+};
+type ProjectsScreenNavigationProp =
+  BottomTabNavigationProp<RootDrawerParamList>;
+export default function ProjectsScreen() {
+  const [filterModal, setFilterModal] = useState(false);
+  const [idTec, setIdTec] = useState(0);
+  const [status, setStatus] = useState('');
+  const [filter, setFilter] = useState<{
+    projeto: string;
+    tecnico: string;
+    grupo_status: string;
+  }>();
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const onClose = () => setFilterModal(false);
+  const openFilterModal = () => setFilterModal(true);
+
+  const { projects, setProjects, loading, setLoading } = useProjectsStore();
+  const [paginationOrders, setPaginationOrders] = useState<PaginationOrders>();
+
+  const itemsProject = projects?.map((item) => item.nome_projeto);
+  const { setTechnicians, technicians } = useTechniciansStore();
+
+  const {
+    orders,
+    setOrders,
+    loading: loadingOrders,
+    setLoading: setLoadingOrders,
+  } = useOrdersStore();
+  const navigation = useNavigation<ProjectsScreenNavigationProp>();
+  const { user } = useUserStore();
+  const handleProjectPress = (projectId: number) => {
+    navigation.navigate('DetailsProjects' as never, { projectId });
+  };
+  const handleNextPage = () => {
+    if (paginationOrders && currentPage < paginationOrders.paginas) {
+      setCurrentPage((prev) => prev + 1);
+    }
+  };
+
+  const handlePrevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage((prev) => prev - 1);
+    }
+  };
+  const handlePress = () => {
+    console.log('Botão pressionado!');
+  };
+  const getProjects = async () => {
+    await fetchProjects({
+      setProjects,
+      setLoading,
+      id_parceiro: user?.id_entidade,
+    });
+  };
+  const getOrders = async () => {
+    await fetchOrders({
+      setOrders,
+      setLoading,
+      setPaginationOrders,
+      id_parceiro: user?.id_entidade,
+      id_tecnico:
+        technicians?.find((it) => it?.nome === filter?.tecnico)?.id ?? 0,
+      perPage: 10,
+      currentPage,
+      filter: {
+        ...filter,
+        projeto: projects?.find((it) => it?.nome_projeto === filter?.projeto)
+          ?.id_projeto,
+      },
+    });
+  };
+  const getStatusData = async () => {
+    const status = await getStatus({
+      id_parceiro: user?.id_entidade,
+    });
+    setStatus(status?.status_analise);
+  };
+  const getTechnicians = async () => {
+    await fetchTechnicians({
+      id_parceiro: user?.id_entidade,
+      setLoading,
+      setTechnicians,
+    });
+  };
+
+  useEffect(() => {
+    getTechnicians();
+  }, []);
+  useEffect(() => {
+    getProjects();
+    getStatusData();
+  }, [user?.id_entidade]);
+
+  useEffect(() => {
+    if (user?.id_entidade) {
+      getOrders();
+    }
+  }, [user?.id_entidade, currentPage, idTec, filter]);
+
+  return (
+    <Container
+      scrollEnabled
+      spacerVertical="small"
+      title="Meus projetos ativos"
+      sizeText={18}
+    >
+      <View>
+        {projects?.length ? (
+          projects?.map((project) => (
+            <ProjectCard
+              key={project.id_projeto}
+              title={project.nome_projeto}
+              startDate={project.data_execucao}
+              endDate={project.data_limite_execucao}
+              description={project.descricao_projeto}
+              onPress={() => handleProjectPress(project.id_projeto)}
+            />
+          ))
+        ) : (
+          <>
+            {loading ? (
+              <ActivityIndicator />
+            ) : (
+              <Typograph> Não há projetos disponiveis </Typograph>
+            )}
+          </>
+        )}
+
+        <Spacer size="medium" />
+        <Typograph variant="title" fontWeight="500" style={styles.title}>
+          Ordens de serviço
+        </Typograph>
+        <View style={styles.orderButton}>
+          {/* <OrderButton
+            text="Ordenar"
+            onPress={handlePress}
+            iconName="chevron-small-down"
+            iconLibrary="Entypo"
+            size="medium"
+            color={theme.colors.secondary.contrastText}
+          /> */}
+
+          <OrderButton
+            text="Filtros"
+            onPress={openFilterModal}
+            iconName="sliders"
+            iconLibrary="FontAwesome"
+            size="small"
+            color={theme.colors.secondary.contrastText}
+          />
+        </View>
+        {filterModal && (
+          <FilterModal
+            filter={filter}
+            setFilter={setFilter}
+            onClose={onClose}
+            title="Filtros"
+            visible={true}
+            itemsSelect={itemsProject}
+            technicians={technicians}
+          />
+        )}
+        <Spacer size="medium" />
+        {loadingOrders ? (
+          <ActivityIndicator />
+        ) : orders?.length ? (
+          orders.map((item, index) => (
+            <View key={index} style={{ marginBottom: 16 }}>
+              <ListCardProjects
+                header={{
+                  osNumber: `${item.numero_os}`,
+                  hasAlert: false,
+                  onOptionsPress: () => {},
+                }}
+                data={item}
+                onPress={() => {
+                  navigation.navigate('OSDetails' as never, item);
+                }}
+              />
+            </View>
+          ))
+        ) : (
+          <Typograph style={{ marginTop: 20 }} textAlign="center">
+            {filter?.projeto || filter?.tecnico || filter?.grupo_status
+              ? 'Não há ordens de serviço disponiveis nos filtros que selecionou!'
+              : 'Não há ordens de serviço disponíveis.'}
+          </Typograph>
+        )}
+
+        {/* Controles de Paginação */}
+        {paginationOrders && paginationOrders.paginas > 1 && (
+          <PaginationControls
+            currentPage={currentPage}
+            totalPages={paginationOrders.paginas}
+            onNext={handleNextPage}
+            onPrev={handlePrevPage}
+          />
+        )}
+      </View>
+    </Container>
+  );
+}
+const styles = StyleSheet.create({
+  content: {
+    justifyContent: 'flex-start',
+    width: '100%',
+    padding: theme.spacing.extraSmall,
+    paddingVertical: theme.spacing.doubleMedium,
+  },
+  containerButtons: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  viewText: {
+    width: '100%',
+  },
+  title: {
+    paddingLeft: theme.spacing.extraSmall,
+    justifyContent: 'flex-start',
+    alignItems: 'flex-start',
+    fontSize: 16,
+  },
+  orderButton: {
+    flexDirection: 'row',
+    borderBottomColor: theme.colors.border,
+    borderBottomWidth: 1,
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    marginVertical: theme.spacing.small,
+    justifyContent: 'space-around',
+  },
+  customButtonText: {
+    color: theme.colors.secondary.contrastText,
+    fontSize: 14,
+  },
+  paginationContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginVertical: theme.spacing.medium,
+  },
+  paginationButton: {
+    backgroundColor: theme.colors.primary.gray,
+    padding: 8,
+    borderRadius: 4,
+    marginHorizontal: 10,
+    borderWidth: 0.5,
+    borderColor: theme.colors.primary.border,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 8,
+  },
+  paginationButtonText: {
+    color: theme.colors.primary.labelValue,
+    fontSize: 14,
+  },
+  disabledButton: {
+    backgroundColor: theme.colors.primary.border,
+    opacity: 0.5,
+  },
+  pageIndicator: {
+    fontSize: 16,
+  },
+});
