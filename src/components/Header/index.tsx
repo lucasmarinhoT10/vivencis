@@ -63,8 +63,7 @@ const styles = StyleSheet.create({
   },
   contentTitle: {
     width: '100%',
-
-    lineHeight: 22,
+    lineHeight: 30,
     marginTop: 2,
     fontWeight: 'bold',
     justifyContent: 'flex-start',

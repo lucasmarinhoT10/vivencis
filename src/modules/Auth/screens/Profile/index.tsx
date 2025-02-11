@@ -9,11 +9,15 @@ import Typograph from '@components/Typograph';
 import useAuthStore from 'src/store/authStore';
 import { useNavigation } from '@react-navigation/native';
 import useUserStore from 'src/store/userStore';
+import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import { RootDrawerParamList } from '@routes/routes';
+
+type ProfileScreenNavigationProp = BottomTabNavigationProp<RootDrawerParamList>;
 
 export default function ProfileScreen() {
   const { logoutUser } = useAuthStore();
   const { removeUser } = useUserStore();
-  const navigation = useNavigation();
+  const navigation = useNavigation<ProfileScreenNavigationProp>();
   const handleLogout = async () => {
     try {
       await logoutUser();
@@ -46,8 +50,8 @@ export default function ProfileScreen() {
         </View>
         <Spacer size="extraLarge" />
 
-        <ListItem
-          title="Configurações de monetização"
+        {/* <ListItem
+          title="Extratos"
           spacerHorizontal="medium"
           left={() => (
             <MaterialIcons
@@ -63,7 +67,7 @@ export default function ProfileScreen() {
               color={theme.colors.primary.title}
             />
           )}
-          onPress={() => console.log('Configurações pressionadas')}
+          onPress={() => navigation.navigate('Extracts')}
         />
         <ListItem
           title="Comprovantes de pré-requisito"
@@ -83,7 +87,7 @@ export default function ProfileScreen() {
             />
           )}
           onPress={() => console.log('Comprovantes de pré-requisito')}
-        />
+        /> */}
         <ListItem
           title="Redefinir senha"
           spacerHorizontal="medium"

@@ -1,3 +1,4 @@
+import Typograph from '@components/Typograph';
 import { theme } from '@theme/theme';
 import React from 'react';
 import { View, Text, StyleSheet, FlatList } from 'react-native';
@@ -43,8 +44,8 @@ export const ShipmentsList: React.FC<ItemsListProps> = ({ title, data }) => {
               ]}
             />
 
-            <Text style={styles.itemLabel}>{item.descricao}</Text>
-            <Text style={styles.itemValue}>{item.quantidade}</Text>
+            <Typograph style={styles.itemLabel}>{item.descricao}</Typograph>
+            <Typograph style={styles.itemValue}>{item.quantidade}</Typograph>
           </View>
         )}
       />

@@ -8,7 +8,7 @@ export async function getTokenTemp(authenticateTokenTemp: any): Promise<any> {
     await authenticateTokenTemp(data?.token)
    
   } catch (error) {
-    console.error('token error', error);
+    console.error('token temp error', error);
     return { success: false, message: 'Erro ao realizar login' };
   }
 }
@@ -134,7 +134,7 @@ export async function getDocumentosTipo({ setLoading, setDocsTipo, tokenTemp}: a
       Authorization: `Bearer ${tokenTemp}`,
     }
 
-    const {data} = await axios.get<any>(`${API_BASE_URL}/wfmb2bapp/v2/parceiros/tipos_documento/parceiro`, {headers});
+    const {data} = tokenTemp ? await axios.get<any>(`${API_BASE_URL}/wfmb2bapp/v2/parceiros/tipos_documento/parceiro`, {headers}) :  await api.get<any>(`${API_BASE_URL}/wfmb2bapp/v2/parceiros/tipos_documento/parceiro`, {headers}) 
     setDocsTipo(data)
     setLoading(false)
     return data

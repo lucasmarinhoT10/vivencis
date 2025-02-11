@@ -20,7 +20,7 @@ export const theme = {
       bgOrderButton: '#F4F4F5',
       placeholder: '#707173',
       graySecondary: '#484C52',
-      shadow: '#60617014',
+      shadow: '#60617020',
       border: '#D4D4D8',
       button: '#2A7287',
       labelValue: '#121212',

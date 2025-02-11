@@ -7,6 +7,7 @@ interface ImageUploaderProps {
   title?: string;
   fileName: string;
   onDeletePress: () => void;
+  handleSecond?: () => void;
   onPress?: () => void;
 }
 
@@ -14,6 +15,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   title,
   fileName,
   onDeletePress,
+  handleSecond,
   onPress,
 }) => {
   const [isMenuVisible, setMenuVisible] = useState(false);
@@ -58,15 +60,17 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
           >
             <Text style={styles.menuText}>Excluir qualificação</Text>
           </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.menuOption}
-            onPress={() => {
-              console.log('Ação 2 selecionada');
-              setMenuVisible(false);
-            }}
-          >
-            <Text style={styles.menuText}>Ação 2</Text>
-          </TouchableOpacity>
+          {handleSecond && (
+            <TouchableOpacity
+              style={styles.menuOption}
+              onPress={() => {
+                handleSecond();
+                setMenuVisible(false);
+              }}
+            >
+              <Text style={styles.menuText}>Ação 2</Text>
+            </TouchableOpacity>
+          )}
         </View>
       )}
     </View>

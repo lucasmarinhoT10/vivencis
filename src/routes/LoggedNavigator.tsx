@@ -11,6 +11,7 @@ import Remessas from '@assets/svgs/tabs/remessas';
 import SignInScreen from '@modules/Auth/screens/SignIn';
 import RecoverScreen from '@modules/Auth/screens/Recover';
 import ShipmentsDetailsScreen from '@modules/Auth/screens/Shipments/ShipmentsDetails';
+import InventoryScreen from '@modules/Auth/screens/Shipments/Inventory';
 import DetailsProjectsScreen from '@modules/Auth/screens/Projects/DetailsProjects';
 import AssignTechnicianScreen from '@modules/Auth/screens/Projects/AssignTechnician';
 import ManageTechniciansScreen from '@modules/Auth/screens/ManageTechnicians';
@@ -23,6 +24,9 @@ import ManualOSClose from '@modules/Auth/screens/Projects/ManualOSClose';
 import { getTokenTemp } from '@modules/Auth/screens/Register/services/register.services';
 import useUserStore from 'src/store/userStore';
 import ChangePasswordScreen from '@modules/Auth/screens/ChangePasswordScreen';
+import AddProofScreen from '@modules/Auth/screens/Projects/UserWithoutCertificate/AddProof';
+import ExtractsScreen from '@modules/Auth/screens/Extracts';
+import ExtractsDetailsScreen from '@modules/Auth/screens/Extracts/ExtractsDetails';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -30,6 +34,7 @@ const ShipmentsStack = createNativeStackNavigator();
 const ProjectsStack = createNativeStackNavigator();
 const TechniciansStack = createNativeStackNavigator();
 const HomeStack = createNativeStackNavigator();
+const ProfileStack = createNativeStackNavigator();
 const ProjectsStackNavigator = () => {
   return (
     <ProjectsStack.Navigator screenOptions={{ headerShown: false }}>
@@ -38,6 +43,7 @@ const ProjectsStackNavigator = () => {
         name="DetailsProjects"
         component={DetailsProjectsScreen}
       />
+      <ProjectsStack.Screen name="AddProof" component={AddProofScreen} />
       <ProjectsStack.Screen name="OSDetails" component={OSDetails} />
       <ProjectsStack.Screen name="OSClose" component={OSClose} />
       <ProjectsStack.Screen name="ManualOSClose" component={ManualOSClose} />
@@ -88,10 +94,23 @@ const ShipmentsStackNavigator = () => {
         name="ShipmentsDetails"
         component={ShipmentsDetailsScreen}
       />
+      <ShipmentsStack.Screen name="Inventory" component={InventoryScreen} />
     </ShipmentsStack.Navigator>
   );
 };
 
+const ProfileStackNavigator = () => {
+  return (
+    <ProfileStack.Navigator screenOptions={{ headerShown: false }}>
+      <ProfileStack.Screen name="Profile" component={ProfileScreen} />
+      <ProfileStack.Screen name="Extracts" component={ExtractsScreen} />
+      <ProfileStack.Screen
+        name="ExtractsDetails"
+        component={ExtractsDetailsScreen}
+      />
+    </ProfileStack.Navigator>
+  );
+};
 const LoggedInTabs = () => {
   return (
     <Tab.Navigator
@@ -118,15 +137,15 @@ const LoggedInTabs = () => {
       <Tab.Screen name="Projetos" component={ProjectsStackNavigator} />
       <Tab.Screen name="Técnicos" component={TechniciansStackNavigator} />
       <Tab.Screen name="Remessas" component={ShipmentsStackNavigator} />
-      <Tab.Screen name="Perfil" component={ProfileScreen} />
+      <Tab.Screen name="Perfil" component={ProfileStackNavigator} />
     </Tab.Navigator>
   );
 };
 
 const LoggedNavigator = () => {
   const { token } = useAuthStore();
+  const isLogged = token !== '' && token !== null;
 
-  const isLogged = token !== '';
   return (
     <Stack.Navigator initialRouteName={isLogged ? 'HomeLogged' : 'SignIn'}>
       <Stack.Screen

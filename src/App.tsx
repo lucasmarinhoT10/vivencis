@@ -1,3 +1,6 @@
+if (__DEV__) {
+  require('../ReactotronConfig');
+}
 import React, { useEffect, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import LoggedNavigator from '@routes/LoggedNavigator';
@@ -16,13 +19,17 @@ import {
   Poppins_800ExtraBold,
   Poppins_900Black,
 } from '@expo-google-fonts/poppins';
+import useUserStore from './store/userStore';
+import { getTokenTemp } from '@modules/Auth/screens/Register/services/register.services';
+import useAuthStore from './store/authStore';
 
 SplashScreen.preventAutoHideAsync();
 
 export default function App() {
   const [appIsReady, setAppIsReady] = useState(false);
-
-  // Carrega as fontes Poppins
+  const { loadUser } = useUserStore();
+  const { token, authenticateTokenTemp, loadTokenTemp, loadToken } =
+    useAuthStore();
   const [fontsLoaded] = useFonts({
     Poppins_100Thin,
     Poppins_200ExtraLight,
@@ -42,7 +49,17 @@ export default function App() {
     }
     prepare();
   }, []);
-
+  useEffect(() => {
+    async function getToken() {
+      await loadToken();
+      await loadUser();
+      if (token === '' || token === null) {
+        await loadTokenTemp();
+        await getTokenTemp(authenticateTokenTemp);
+      }
+    }
+    getToken();
+  }, []);
   if (!appIsReady || !fontsLoaded) {
     return null;
   }

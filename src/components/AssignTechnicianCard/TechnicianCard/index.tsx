@@ -69,14 +69,14 @@ const TechnicianCard: React.FC<TechnicianCardProps> = ({
               <View style={styles.details}>
                 <View style={styles.header}>
                   <Text style={styles.name}>{item.nome}</Text>
-                  <TouchableOpacity onPress={() => toggleMenu(item.id)}>
+                  {/* <TouchableOpacity onPress={() => toggleMenu(item.id)}>
                     <Ionicons
                       name="ellipsis-horizontal"
                       size={20}
                       style={{ alignItems: 'flex-end' }}
                       color={theme.colors.text.primary}
                     />
-                  </TouchableOpacity>
+                  </TouchableOpacity> */}
                 </View>
 
                 <View style={styles.description}>
@@ -96,7 +96,7 @@ const TechnicianCard: React.FC<TechnicianCardProps> = ({
               </View>
             </View>
             <Spacer size="small" />
-            {activeMenuId === item.id && (
+            {/* {activeMenuId === item.id && (
               <View style={styles.menuContainer}>
                 <TouchableOpacity
                   style={styles.menuOption}
@@ -116,7 +116,7 @@ const TechnicianCard: React.FC<TechnicianCardProps> = ({
                   <Text style={styles.menuText}>Aceite</Text>
                 </TouchableOpacity>
               </View>
-            )}
+            )} */}
           </TouchableOpacity>
         )}
       />
@@ -219,12 +219,14 @@ const styles = StyleSheet.create({
 
   technicianCard: {
     padding: 12,
+    borderWidth: 0.5,
     backgroundColor: theme.colors.primary.contrastText,
+    borderColor: theme.colors?.border,
     borderRadius: 8,
     marginBottom: 8,
     shadowColor: '#000',
     shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 1 },
     shadowRadius: 4,
     elevation: 2,
   },

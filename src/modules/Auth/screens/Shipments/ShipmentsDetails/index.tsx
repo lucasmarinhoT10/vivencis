@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Container from '@components/Container';
-import { StyleSheet, View } from 'react-native';
+import { Modal, StyleSheet, View } from 'react-native';
 
 import { theme } from '@theme/theme';
 import { ShipmentsList } from '@components/ShipmentsList';
@@ -9,26 +9,43 @@ import Spacer from '@components/Spacer';
 
 import Typograph from '@components/Typograph';
 import Button from '@components/Button';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
+import {
+  acceptedRemessa,
+  fetchShipments,
+} from '../services/shipments.services';
+import useUserStore from 'src/store/userStore';
+import useShipmentsStore from 'src/store/shipmentsStore';
 
 export default function ShipmentsDetailsScreen(props: any) {
   const [data, setdata] = useState(props.route.params);
+  const { user } = useUserStore();
+  const { setShipments, shipments } = useShipmentsStore();
   const [isAccepted, setIsAccepted] = useState(false);
   const [acceptDate, setAcceptDate] = useState('');
-
-  const handleAcceptShipment = () => {
+  const [loading, setLoading] = useState(false);
+  const handleAcceptShipment = async () => {
+    const response = await acceptedRemessa({
+      setLoading,
+      id_remessa: data?.id_remessa,
+      id_user: user?.id,
+    });
     setIsAccepted(true);
     const today = moment(new Date().getTime()).format('DD/MM/YYYY');
 
     setAcceptDate(`${today}`);
+    await getShipments();
+    setShowSuccessModal(false);
   };
-  const itemsData = [
-    { label: 'Antenas', value1: 103, value2: 135 },
-    { label: 'Receptores', value1: 12, value2: 24 },
-    { label: 'Item 3', value1: 4, value2: 6 },
-    { label: 'Item 4', value1: 0, value2: 8 },
-    { label: 'Item 5', value1: 0, value2: 3 },
-  ];
+
+  const getShipments = async () => {
+    await fetchShipments({
+      id_parceiro: user?.id_entidade,
+      setLoading,
+      setShipments,
+    });
+  };
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   return (
     <Container
       scrollEnabled
@@ -40,6 +57,24 @@ export default function ShipmentsDetailsScreen(props: any) {
         <Typograph fontWeight="500" style={styles.subtitle}>
           Dados da remessa
         </Typograph>
+
+        <Spacer size="medium" />
+        <View style={styles.itemContainer}>
+          <Typograph style={styles.itemLabel}>Projeto</Typograph>
+          <Typograph style={styles.itemValue}>{data?.projeto}</Typograph>
+        </View>
+        <View style={styles.itemContainer}>
+          <Typograph style={styles.itemLabel}>Quantidade de items</Typograph>
+          <Typograph style={styles.itemValue}>{data?.itens?.length}</Typograph>
+        </View>
+        <View style={styles.itemContainer}>
+          <Typograph style={styles.itemLabel}>Data de envio</Typograph>
+          <Typograph style={styles.itemValue}>{data?.data}</Typograph>
+        </View>
+        <View style={styles.itemContainer}>
+          <Typograph style={styles.itemLabel}>Status</Typograph>
+          <Typograph style={styles.itemValue}>{data?.status}</Typograph>
+        </View>
       </View>
 
       <Spacer size="medium" />
@@ -62,15 +97,48 @@ export default function ShipmentsDetailsScreen(props: any) {
           style={{ height: theme.sizes.extralarge }}
           text="Aceitar Remessa"
           variant="quaternary"
-          onPress={handleAcceptShipment}
+          onPress={() => setShowSuccessModal(true)}
         />
       )}
+      <Modal
+        visible={showSuccessModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowSuccessModal(false)}
+      >
+        <View style={styles.modalBackground}>
+          <View style={styles.cardSucess}>
+            <Ionicons name="checkmark-circle" size={64} color="#1EAD68" />
+            <Spacer size="small" />
+            <Typograph fontWeight="600" style={styles.titleSucess}>
+              Confirmaremos o recebimento da Remessa
+            </Typograph>
+            <Spacer size="medium" />
+            <Typograph style={styles.subtitle}>
+              Você recebeu a remessa?
+            </Typograph>
+            <Spacer size="large" />
+            <Button
+              style={{ height: theme.sizes.extralarge }}
+              text="Confirmar Recebimento"
+              variant="secondary"
+              onPress={handleAcceptShipment}
+            />
+            <Spacer size="medium" />
+            <Button
+              style={{ height: theme.sizes.extralarge }}
+              text="Voltar"
+              variant="tertiary"
+              onPress={() => setShowSuccessModal(false)}
+            />
+          </View>
+        </View>
+      </Modal>
     </Container>
   );
 }
 const styles = StyleSheet.create({
   card: {
-    height: 242,
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
     elevation: 4,
@@ -78,20 +146,69 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 10,
     shadowRadius: 3,
+    padding: 12,
   },
   subtitle: {
     textAlign: 'left',
-    padding: 20,
     fontSize: 16,
+  },
+  titleSucess: {
+    textAlign: 'center',
+    fontSize: 20,
+    padding: 10,
   },
   link: {
     textAlign: 'center',
   },
+  containerSucess: {
+    flex: 1,
+    backgroundColor: '#E5E5E5',
+    justifyContent: 'center',
+    alignItems: 'center',
 
+    height: '100%',
+  },
+  modalBackground: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 16,
+  },
+  cardSucess: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 24,
+    width: '90%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 4,
+    shadowColor: theme.colors.primary.shadow,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+  },
   title: {
     paddingLeft: theme.spacing.extraSmall,
     justifyContent: 'flex-start',
     alignItems: 'flex-start',
     fontSize: 22,
+  },
+  itemContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+
+  itemLabel: {
+    fontSize: 14,
+    color: theme.colors.primary.placeholder,
+    flex: 1,
+  },
+  itemValue: {
+    fontSize: 14,
+    fontWeight: '400',
+    color: theme.colors.primary.placeholder,
   },
 });

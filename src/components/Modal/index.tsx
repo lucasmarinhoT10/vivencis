@@ -15,6 +15,9 @@ interface ModalConfirmationProps {
 
   onClose: () => void;
   onConfirm: (date: string, time: string, observation: string) => void;
+  okText?: string;
+  cancelText?: string;
+  confirmText?: string;
 }
 
 export const ModalConfirmation: React.FC<ModalConfirmationProps> = ({
@@ -27,6 +30,8 @@ export const ModalConfirmation: React.FC<ModalConfirmationProps> = ({
   isConfirm = false,
   footerTitle,
   hasBottom = false,
+  cancelText,
+  okText,
 }) => {
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
@@ -63,7 +68,7 @@ export const ModalConfirmation: React.FC<ModalConfirmationProps> = ({
               onPress={() => onConfirm(date, time, observation)}
               variant="secondary"
               color={theme.colors.primary.button}
-              text="Ok"
+              text={okText}
               style={{
                 height: 50,
                 borderWidth: 1.5,
@@ -88,7 +93,7 @@ export const ModalConfirmation: React.FC<ModalConfirmationProps> = ({
                 onPress={() => onClose()}
                 variant="quinary"
                 color={theme.colors.primary.button}
-                text="Cancelar"
+                text={cancelText}
                 style={{
                   borderRadius: 8,
                   height: 56,
@@ -166,7 +171,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
 
-  close: { position: 'absolute', top: 0, right: -60, zIndex: 10 },
+  close: { position: 'absolute', top: 0, right: -40, zIndex: 10 },
 
   subtitle: {
     fontSize: 16,

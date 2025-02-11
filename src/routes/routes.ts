@@ -8,12 +8,16 @@ export type RootDrawerParamList = {
   HomeLogged: undefined;
   Projects: undefined;
   DetailsProjects: { projectId?: number };
+  AddProof: undefined;
   AssignTechnician: { osNumber: string };
   ManageTechnicians: undefined;
   TechnicalRegistration: undefined;
   Shipments: undefined;
   ShipmentsDetails: undefined;
   Profile: undefined;
+  Extracts: undefined;
+  ExtractsDetails: undefined;
+  Inventory: undefined;
   RecoverPassword: { email: string };
 };
 

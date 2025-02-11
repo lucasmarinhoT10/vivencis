@@ -1,209 +1,69 @@
-import Button from '@components/Button';
 import Container from '@components/Container';
-import Input from '@components/Input';
-import Line from '@components/Line';
-import Spacer from '@components/Spacer';
-import Typograph from '@components/Typograph';
-import DownloadFile from '@components/DownloadFile';
 
 import { theme } from '@theme/theme';
 import React, { useState } from 'react';
-import { FormProvider, useForm } from 'react-hook-form';
-import { StyleSheet, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { useNavigation } from '@react-navigation/native';
 
 import { RootDrawerParamList } from '@routes/routes';
-import ImageUploader from '@components/ImageUploader';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import StepOne from './StepOne';
+import StepTwo from './StepTwo';
 
 type RegisterDocumentScreenNavigationProp =
   BottomTabNavigationProp<RootDrawerParamList>;
 
 const TechnicalRegistrationScreen: React.FC = () => {
   const navigation = useNavigation<RegisterDocumentScreenNavigationProp>();
-  const formMethods = useForm();
-  const [currentStep, setCurrentStep] = useState(1);
+  const [step, setStep] = useState(1);
+  const [data, setData] = useState<any>();
 
-  const handleNextStep = () => {
-    setCurrentStep((prevStep) => prevStep + 1);
-  };
-
-  const [qualifications, setQualifications] = useState<
-    Array<{ id: number; fileName: string }>
-  >([]);
-  const [nextId, setNextId] = useState(1);
-
-  const handleAddQualification = () => {
-    setQualifications((prev) => [
-      ...prev,
-      { id: nextId, fileName: `qualificacao-${nextId}.pdf` },
-    ]);
-    setNextId((prev) => prev + 1);
+  const showStep = () => {
+    switch (step) {
+      case 1:
+        return (
+          <StepOne
+            setDataRegister={setData}
+            setStep={setStep}
+            step={step}
+            dataRegister={data}
+          />
+        );
+      case 2:
+        return (
+          <StepTwo
+            setDataRegister={setData}
+            setStep={setStep}
+            step={step}
+            dataRegister={data}
+          />
+        );
+      default:
+        return (
+          <StepOne
+            setDataRegister={setData}
+            setStep={setStep}
+            step={step}
+            dataRegister={data}
+          />
+        );
+    }
   };
   return (
-    <Container scrollEnabled title="Cadastro de Técnico" hasGoBack>
-      <View style={styles.content}>
-        {currentStep === 1 && (
-          <>
-            <Typograph
-              variant="title"
-              textAlign="left"
-              fontWeight="500"
-              style={styles.title}
-            >
-              1. Dados cadastrais
-            </Typograph>
-            <Spacer size="medium" />
-            <Line progress={0.3} height={8} />
-            <Spacer size="medium" />
-            <FormProvider {...formMethods}>
-              <Typograph
-                variant="title"
-                textAlign="left"
-                fontWeight="400"
-                style={styles.title}
-              >
-                Nome completo
-              </Typograph>
-              <Input control={formMethods.control} name="name" />
-              <Spacer size="medium" />
-              <Typograph
-                variant="title"
-                textAlign="left"
-                fontWeight="400"
-                style={styles.title}
-              >
-                CPF
-              </Typograph>
-              <Input control={formMethods.control} name="cpf" />
-              <Spacer size="medium" />
-              <Typograph
-                variant="title"
-                textAlign="left"
-                fontWeight="400"
-                style={styles.title}
-              >
-                Email
-              </Typograph>
-              <Input control={formMethods.control} name="email" />
-              <Spacer size="medium" />
-              <Typograph
-                variant="title"
-                textAlign="left"
-                fontWeight="400"
-                style={styles.title}
-              >
-                Confirmar email
-              </Typograph>
-              <Input control={formMethods.control} name="confirmEmail" />
-              <Spacer size="medium" />
-              <Typograph
-                variant="title"
-                textAlign="left"
-                fontWeight="400"
-                style={styles.title}
-              >
-                Senha
-              </Typograph>
-              <Input control={formMethods.control} name="password" />
-              <Spacer size="medium" />
-              <Typograph
-                variant="title"
-                textAlign="left"
-                fontWeight="400"
-                style={styles.title}
-              >
-                Confirmar senha
-              </Typograph>
-              <Input control={formMethods.control} name="confirmPassword" />
-              <Spacer size="extraLarge" />
-            </FormProvider>
-            <Button
-              text="Próximo"
-              style={{ height: theme.sizes.extralarge }}
-              variant="quaternary"
-              onPress={handleNextStep}
-            />
-          </>
-        )}
-        {currentStep === 2 && (
-          <>
-            <View>
-              <Typograph
-                variant="title"
-                textAlign="left"
-                fontWeight="500"
-                style={styles.title}
-              >
-                2. Serviços e qualificações
-              </Typograph>
-              <Spacer size="medium" />
-              <Line progress={0.7} height={8} />
-              <Spacer size="medium" />
-              <Typograph
-                variant="title"
-                textAlign="left"
-                fontWeight="500"
-                style={styles.title}
-              >
-                Qualificações
-              </Typograph>
-              <Spacer size="small" />
-
-              {qualifications.map((qualification) => (
-                <View key={qualification.id} style={styles.fileCard}>
-                  <ImageUploader
-                    title={`Qualificação ${qualification.id}`}
-                    fileName={qualification.fileName}
-                    onDeletePress={() => console.log('Qualificação excluída')}
-                  />
-                </View>
-              ))}
-              <Spacer size="small" />
-              <Input
-                control={formMethods.control}
-                placeholder="Descreva a qualificação"
-                name="namePersonResponsible"
-              />
-              <Spacer size="medium" />
-              <DownloadFile
-                iconType="file"
-                label="Anexar arquivo"
-                onImageSelect={(uri) => console.log('Imagem selecionada:', uri)}
-              />
-              <Spacer size="large" />
-              <TouchableOpacity onPress={handleAddQualification}>
-                <Typograph
-                  variant="title"
-                  textAlign="center"
-                  fontWeight="500"
-                  style={{
-                    color: theme.colors.primary.link,
-                    fontSize: theme.sizes.small,
-                    marginBottom: 100,
-                  }}
-                >
-                  Adicionar qualificação
-                </Typograph>
-              </TouchableOpacity>
-              <Spacer size="extraLarge" />
-              <Spacer size="extraLarge" />
-              <Spacer size="extraLarge" />
-              <Button
-                text="Finalizar cadastro"
-                variant="quaternary"
-                style={styles.button}
-                onPress={() =>
-                  navigation.navigate('ManageTechnicians', {
-                    addTechnical: true,
-                  } as never)
-                }
-              />
-            </View>
-          </>
-        )}
-      </View>
+    <Container
+      scrollEnabled
+      title="Cadastro de Técnico"
+      hasGoBack
+      handlerPrimary={() => {
+        if (step === 2) {
+          setStep(step - 1);
+        } else {
+          navigation.goBack();
+        }
+      }}
+    >
+      <View style={styles.content}>{showStep()}</View>
     </Container>
   );
 };

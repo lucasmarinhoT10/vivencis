@@ -30,55 +30,8 @@ import { PaginationOrders } from 'src/store/Models/Orders';
 import { MaterialIcons } from '@expo/vector-icons';
 import useTechniciansStore from 'src/store/techniciansStore';
 import { fetchTechnicians } from '../ManageTechnicians/services/technicians.services';
-const PaginationControls = ({
-  currentPage,
-  totalPages,
-  onNext,
-  onPrev,
-}: {
-  currentPage: number;
-  totalPages: number;
-  onNext: () => void;
-  onPrev: () => void;
-}) => {
-  return (
-    <View style={styles.paginationContainer}>
-      <TouchableOpacity
-        style={[
-          styles.paginationButton,
-          currentPage === 1 && styles.disabledButton,
-        ]}
-        onPress={onPrev}
-        disabled={currentPage === 1}
-      >
-        <MaterialIcons
-          size={20}
-          name="arrow-back-ios"
-          color={theme.colors.primary.labelValue}
-        />
-        <Typograph style={styles.paginationButtonText}>Anterior</Typograph>
-      </TouchableOpacity>
-      <Typograph style={styles.pageIndicator}>
-        {currentPage} de {totalPages}
-      </Typograph>
-      <TouchableOpacity
-        style={[
-          styles.paginationButton,
-          currentPage === totalPages && styles.disabledButton,
-        ]}
-        onPress={onNext}
-        disabled={currentPage === totalPages}
-      >
-        <Typograph style={styles.paginationButtonText}>Próximo</Typograph>
-        <MaterialIcons
-          size={20}
-          name="arrow-forward-ios"
-          color={theme.colors.primary.labelValue}
-        />
-      </TouchableOpacity>
-    </View>
-  );
-};
+import { PaginationControls } from '@components/Pagination';
+
 type ProjectsScreenNavigationProp =
   BottomTabNavigationProp<RootDrawerParamList>;
 export default function ProjectsScreen() {
@@ -123,9 +76,7 @@ export default function ProjectsScreen() {
       setCurrentPage((prev) => prev - 1);
     }
   };
-  const handlePress = () => {
-    console.log('Botão pressionado!');
-  };
+
   const getProjects = async () => {
     await fetchProjects({
       setProjects,
@@ -185,34 +136,37 @@ export default function ProjectsScreen() {
       title="Meus projetos ativos"
       sizeText={18}
     >
-      <View>
-        {projects?.length ? (
-          projects?.map((project) => (
-            <ProjectCard
-              key={project.id_projeto}
-              title={project.nome_projeto}
-              startDate={project.data_execucao}
-              endDate={project.data_limite_execucao}
-              description={project.descricao_projeto}
-              onPress={() => handleProjectPress(project.id_projeto)}
-            />
-          ))
-        ) : (
-          <>
-            {loading ? (
-              <ActivityIndicator />
-            ) : (
-              <Typograph> Não há projetos disponiveis </Typograph>
-            )}
-          </>
-        )}
+      {loading ? (
+        <ActivityIndicator style={{ marginTop: 120 }} />
+      ) : (
+        <View>
+          {projects?.length ? (
+            projects?.map((project) => (
+              <ProjectCard
+                key={project.id_projeto}
+                title={project.nome_projeto}
+                startDate={project.data_execucao}
+                endDate={project.data_limite_execucao}
+                description={project.descricao_projeto}
+                onPress={() => handleProjectPress(project.id_projeto)}
+              />
+            ))
+          ) : (
+            <>
+              {loading ? (
+                <ActivityIndicator />
+              ) : (
+                <Typograph> Não há projetos disponiveis </Typograph>
+              )}
+            </>
+          )}
 
-        <Spacer size="medium" />
-        <Typograph variant="title" fontWeight="500" style={styles.title}>
-          Ordens de serviço
-        </Typograph>
-        <View style={styles.orderButton}>
-          {/* <OrderButton
+          <Spacer size="medium" />
+          <Typograph variant="title" fontWeight="500" style={styles.title}>
+            Ordens de serviço
+          </Typograph>
+          <View style={styles.orderButton}>
+            {/* <OrderButton
             text="Ordenar"
             onPress={handlePress}
             iconName="chevron-small-down"
@@ -221,63 +175,64 @@ export default function ProjectsScreen() {
             color={theme.colors.secondary.contrastText}
           /> */}
 
-          <OrderButton
-            text="Filtros"
-            onPress={openFilterModal}
-            iconName="sliders"
-            iconLibrary="FontAwesome"
-            size="small"
-            color={theme.colors.secondary.contrastText}
-          />
-        </View>
-        {filterModal && (
-          <FilterModal
-            filter={filter}
-            setFilter={setFilter}
-            onClose={onClose}
-            title="Filtros"
-            visible={true}
-            itemsSelect={itemsProject}
-            technicians={technicians}
-          />
-        )}
-        <Spacer size="medium" />
-        {loadingOrders ? (
-          <ActivityIndicator />
-        ) : orders?.length ? (
-          orders.map((item, index) => (
-            <View key={index} style={{ marginBottom: 16 }}>
-              <ListCardProjects
-                header={{
-                  osNumber: `${item.numero_os}`,
-                  hasAlert: false,
-                  onOptionsPress: () => {},
-                }}
-                data={item}
-                onPress={() => {
-                  navigation.navigate('OSDetails' as never, item);
-                }}
-              />
-            </View>
-          ))
-        ) : (
-          <Typograph style={{ marginTop: 20 }} textAlign="center">
-            {filter?.projeto || filter?.tecnico || filter?.grupo_status
-              ? 'Não há ordens de serviço disponiveis nos filtros que selecionou!'
-              : 'Não há ordens de serviço disponíveis.'}
-          </Typograph>
-        )}
+            <OrderButton
+              text="Filtros"
+              onPress={openFilterModal}
+              iconName="sliders"
+              iconLibrary="FontAwesome"
+              size="small"
+              color={theme.colors.secondary.contrastText}
+            />
+          </View>
+          {filterModal && (
+            <FilterModal
+              filter={filter}
+              setFilter={setFilter}
+              onClose={onClose}
+              title="Filtros"
+              visible={true}
+              itemsSelect={itemsProject}
+              technicians={technicians}
+            />
+          )}
+          <Spacer size="medium" />
+          {loadingOrders ? (
+            <ActivityIndicator />
+          ) : orders?.length ? (
+            orders.map((item, index) => (
+              <View key={index} style={{ marginBottom: 16 }}>
+                <ListCardProjects
+                  header={{
+                    osNumber: `${item.numero_os}`,
+                    hasAlert: false,
+                    onOptionsPress: () => {},
+                  }}
+                  data={item}
+                  onPress={() => {
+                    navigation.navigate('OSDetails' as never, item);
+                  }}
+                />
+              </View>
+            ))
+          ) : (
+            <Typograph style={{ marginTop: 20 }} textAlign="center">
+              {filter?.projeto || filter?.tecnico || filter?.grupo_status
+                ? 'Não há ordens de serviço disponiveis nos filtros que selecionou!'
+                : 'Não há ordens de serviço disponíveis.'}
+            </Typograph>
+          )}
 
-        {/* Controles de Paginação */}
-        {paginationOrders && paginationOrders.paginas > 1 && (
-          <PaginationControls
-            currentPage={currentPage}
-            totalPages={paginationOrders.paginas}
-            onNext={handleNextPage}
-            onPrev={handlePrevPage}
-          />
-        )}
-      </View>
+          {/* Controles de Paginação */}
+          {paginationOrders && paginationOrders.paginas > 1 && (
+            <PaginationControls
+              currentPage={currentPage}
+              totalPages={paginationOrders.paginas}
+              onNext={handleNextPage}
+              onPrev={handlePrevPage}
+            />
+          )}
+        </View>
+      )}
     </Container>
   );
 }

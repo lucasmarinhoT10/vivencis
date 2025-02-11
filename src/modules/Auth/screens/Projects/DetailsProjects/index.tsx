@@ -69,8 +69,10 @@ export default function DetailsProjectsScreen(props: any) {
   }, [props?.route?.params?.projectId]);
   const route = useRoute();
   const homeLogged = route.params;
+  const projects = route.params;
 
   const [routeName] = useState(homeLogged?.screenName);
+
   const [modal, setModal] = useState(false);
 
   const toggleModal = async () => {
@@ -92,10 +94,15 @@ export default function DetailsProjectsScreen(props: any) {
   };
 
   const [secondModal, setSecondModal] = useState(false);
+  const [modalNoCertified, setModalNoCertified] = useState(false);
 
   const toggleSecondModal = () => {
     setSecondModal((prev) => !prev);
   };
+  const toggleModalNoCertified = () => {
+    setModalNoCertified((prev) => !prev);
+  };
+  console.log(routeName);
 
   const handleNavigateToAssignTechnician = (projectId: string) => {
     const selectedProject = projectDetailsMock.find(
@@ -244,16 +251,16 @@ export default function DetailsProjectsScreen(props: any) {
                 />
               </View>
             ))}
+          {typeof routeName === 'string' && routeName === 'HomeLogged' && (
+            <Button
+              onPress={() => setModal(true)}
+              style={{ height: 48, marginBottom: 52 }}
+              variant="quinary"
+              text="Inscrever no projeto"
+              fontWeight="600"
+            />
+          )}
         </View>
-      )}
-      {typeof routeName === 'string' && routeName === 'HomeLogged' && (
-        <Button
-          onPress={() => setModal(true)}
-          style={{ height: 48, marginBottom: 52 }}
-          variant="quinary"
-          text="Inscrever no projeto"
-          fontWeight="600"
-        />
       )}
 
       <ModalConfirmation
@@ -267,6 +274,7 @@ export default function DetailsProjectsScreen(props: any) {
         onConfirm={(date, time, observation) => {
           toggleModal();
         }}
+        cancelText="Cancelar"
       />
 
       <ModalConfirmation

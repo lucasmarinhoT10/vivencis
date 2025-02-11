@@ -18,12 +18,12 @@ interface InputProps {
   visible: boolean;
   setVisible: (value: boolean) => void;
   setSelected: (value: string) => void;
-  selected: string;
+  selected?: string | undefined;
   label?: string;
-  editable?: boolean; // Adicionando a prop editable
+  editable?: boolean;
   noBorder?: boolean;
   size?: number;
-  error?: string; // Nova prop para exibir mensagens de erro
+  error?: string;
 }
 
 const SelectDrop: React.FC<InputProps> = ({

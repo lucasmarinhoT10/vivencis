@@ -5,21 +5,22 @@ import { Modal, StyleSheet, View } from 'react-native';
 import { theme } from '@theme/theme';
 import Typograph from '@components/Typograph';
 
-import MultiSelector from '@components/MultiSelector';
 import Spacer from '@components/Spacer';
 import { ListCardShipments } from '@components/ListCardShipments';
-import shipmentsMock from 'src/mocks/shipments';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { RootDrawerParamList } from '@routes/routes';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { Ionicons } from '@expo/vector-icons';
+import { Feather, Ionicons, MaterialIcons } from '@expo/vector-icons';
 import Button from '@components/Button';
-import SelectDrop from '@components/SelectDrop';
-import { fetchShipments } from './services/shipments.services';
+import { acceptedRemessa, fetchShipments } from './services/shipments.services';
 import useUserStore from 'src/store/userStore';
 import useShipmentsStore from 'src/store/shipmentsStore';
 import { RemessaProps } from 'src/store/Models/Shipments';
-import Input from '@components/Input';
+import OrderButton from '@components/OrderButton';
+import ShipmentsFilterModal, {
+  FilterCriteriaShip,
+} from '@components/ShipmentsFilterModal';
+import { PaginationControls } from '@components/Pagination';
 
 type ShipmentsScreenNavigationProp =
   BottomTabNavigationProp<RootDrawerParamList>;
@@ -27,42 +28,68 @@ type ShipmentsScreenNavigationProp =
 export default function ShipmentsScreen(props: any) {
   const id_project = props.route?.params?.id ?? undefined;
   const { user } = useUserStore();
+  const [filterModalVisible, setFilterModalVisible] = useState(false);
+  const [filterCriteria, setFilterCriteria] = useState<FilterCriteriaShip>();
+
   const { setShipments, shipments, setLoading, loading } = useShipmentsStore();
-  const [selectedOption, setSelectedOption] = useState<string>('option1');
   const navigation = useNavigation<ShipmentsScreenNavigationProp>();
   const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [currentStep, setCurrentStep] = useState(1);
-  const [visible, setVisible] = useState(false);
-  const [selected, setSelected] = useState('');
 
-  const handleNextStep = () => {
-    setCurrentStep((prevStep) => prevStep + 1);
-  };
+  const [id_remessa, setId_remessa] = useState<number>();
+  const [currentPage, setCurrentPage] = useState<number>(1);
+
   const getShipments = async () => {
     await fetchShipments({
       id_parceiro: user?.id_entidade,
       setLoading,
       setShipments,
+      status: filterCriteria?.status,
+      id_projeto: filterCriteria?.id_projeto,
+      perPage: 10,
+      currentPage,
     });
   };
 
   useEffect(() => {
     getShipments();
-  }, []);
-  const closeSuccessModal = () => {
-    setShowSuccessModal(false);
-    setCurrentStep(1);
-  };
-  const optionsSelect = ['Opção 1', 'Opção 2', 'Opção 3', 'Opção 4'];
-  const optionsNavigate = [
-    { label: 'Todos', value: 'option1' },
-    { label: 'Pendente', value: 'option2' },
-    { label: 'Recebida', value: 'option3' },
-  ];
-  const data = id_project
-    ? shipments?.remessas?.filter((it) => it.id_projeto === id_project)
-    : shipments?.remessas;
+  }, [filterCriteria, currentPage, id_project]);
+  useEffect(() => {
+    setFilterCriteria({
+      ...filterCriteria,
+      id_projeto: props.route?.params?.id,
+    });
+  }, [props.route?.params?.id]);
 
+  const handleAcceptShipment = async () => {
+    await acceptedRemessa({
+      setLoading,
+      id_remessa,
+      id_user: user?.id,
+    });
+
+    await getShipments();
+    setShowSuccessModal(false);
+    setId_remessa(undefined);
+  };
+  const handlePressFilters = () => {
+    setFilterModalVisible(true);
+  };
+  const handleApplyFilters = (criteria: any) => {
+    setFilterCriteria(criteria);
+    setFilterModalVisible(false);
+  };
+
+  const handleNextPage = () => {
+    if (shipments && currentPage < shipments.paginas) {
+      setCurrentPage((prev) => prev + 1);
+    }
+  };
+
+  const handlePrevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage((prev) => prev - 1);
+    }
+  };
   return (
     <Container
       scrollEnabled
@@ -81,17 +108,41 @@ export default function ShipmentsScreen(props: any) {
               Inventário
             </Typograph>
             <Spacer size="medium" />
-            <MultiSelector
-              options={optionsNavigate}
-              selected={selectedOption}
-              setSelected={setSelectedOption}
+            <Button
+              text="Inventário"
+              style={{
+                height: 70,
+                backgroundColor: theme.colors.primary.quaternary,
+              }}
+              variant="quinary"
+              left={() => <Feather name="box" size={20} color="white" />}
+              right={() => (
+                <MaterialIcons
+                  name="arrow-forward-ios"
+                  size={16}
+                  style={{ marginLeft: '70%' }}
+                  color="white"
+                />
+              )}
+              onPress={() => navigation.navigate('Inventory')}
             />
+            <Spacer size="medium" />
+            <OrderButton
+              text="Filtros"
+              onPress={handlePressFilters}
+              iconName="sliders"
+              iconLibrary="FontAwesome"
+              size="small"
+              color={theme.colors.secondary.contrastText}
+            />
+            <Spacer size="medium" />
 
-            <Spacer size="large" />
-            <Input showSearchIcon name="" placeholder="Pesquisar" />
-
-            <Spacer size="large" />
-            {data?.map((shipment: RemessaProps) => (
+            {shipments?.remessas && shipments?.remessas?.length <= 0 && (
+              <Typograph textAlign="center" style={{ marginTop: 100 }}>
+                Nenhuma remessa foi encontrada
+              </Typograph>
+            )}
+            {shipments?.remessas?.map((shipment: RemessaProps) => (
               <View key={shipment.id_remessa} style={{ marginBottom: 16 }}>
                 <ListCardShipments
                   header={{
@@ -113,19 +164,37 @@ export default function ShipmentsScreen(props: any) {
                     },
                     {
                       text: 'Aceitar',
-                      onPress: () => setShowSuccessModal(true),
+                      onPress: () => {
+                        setId_remessa(shipment?.id_remessa);
+                        setShowSuccessModal(true);
+                      },
                     },
                   ]}
                 />
               </View>
             ))}
+
+            {shipments && shipments?.paginas > 1 && (
+              <PaginationControls
+                currentPage={currentPage}
+                totalPages={shipments?.paginas}
+                onNext={handleNextPage}
+                onPrev={handlePrevPage}
+              />
+            )}
           </>
         )}
+        <ShipmentsFilterModal
+          visible={filterModalVisible}
+          onClose={() => setFilterModalVisible(false)}
+          onApply={handleApplyFilters}
+          filters={filterCriteria}
+        />
         <Modal
           visible={showSuccessModal}
           transparent={true}
           animationType="fade"
-          onRequestClose={closeSuccessModal}
+          onRequestClose={() => setShowSuccessModal(false)}
         >
           <View style={styles.modalBackground}>
             <View style={styles.cardSucess}>
@@ -143,7 +212,7 @@ export default function ShipmentsScreen(props: any) {
                 style={{ height: theme.sizes.extralarge }}
                 text="Confirmar Recebimento"
                 variant="secondary"
-                onPress={() => setShowSuccessModal(false)}
+                onPress={handleAcceptShipment}
               />
               <Spacer size="medium" />
               <Button
@@ -183,7 +252,6 @@ const styles = StyleSheet.create({
 
   containerSucess: {
     flex: 1,
-    backgroundColor: '#E5E5E5',
     justifyContent: 'center',
     alignItems: 'center',
 
@@ -191,7 +259,7 @@ const styles = StyleSheet.create({
   },
   modalBackground: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(0,0,0,0.1)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 16,
