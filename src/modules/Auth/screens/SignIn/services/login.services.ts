@@ -11,7 +11,8 @@ export async function login({
   setUser,
   authenticateUser,
   setLoading,
-  setRegister
+  rememberMe,
+  setRegister,
 }: any): Promise<any> {
   try {
     setLoading(true);
@@ -29,12 +30,12 @@ export async function login({
       });
       if (response?.status_analise === 'LIBERADO') {
         setLoading(false);
-        await authenticateUser(data?.token);
+        await authenticateUser(data?.token, rememberMe);
         await setUser(data?.usuario);
-        await setRegister(response)
+        await setRegister(response);
         return { success: true, data: data };
       } else if (response?.status_analise === 'EM ANALISE') {
-        await authenticateUser(data?.token);
+        await authenticateUser(data?.token, rememberMe);
         await setUser(data?.usuario);
         setLoading(false);
         return {
@@ -66,17 +67,21 @@ export async function login({
     }
   }
 }
+
 export async function getStatus({ id_parceiro, token }: any): Promise<any> {
   try {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,
     };
-    const { data } = token ? await axios.get<any>(
-      `${API_BASE_URL}/wfmb2bapp/v2/parceiros/status/${id_parceiro}`,
-      { headers }
-    ) : await api.get<any>(
-      `${API_BASE_URL}/wfmb2bapp/v2/parceiros/status/${id_parceiro}`);
+    const { data } = token
+      ? await axios.get<any>(
+          `${API_BASE_URL}/wfmb2bapp/v2/parceiros/status/${id_parceiro}`,
+          { headers }
+        )
+      : await api.get<any>(
+          `${API_BASE_URL}/wfmb2bapp/v2/parceiros/status/${id_parceiro}`
+        );
 
     return data;
   } catch (error) {
@@ -90,11 +95,14 @@ export async function getRegistro({ id_parceiro, token }: any): Promise<any> {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,
     };
-    const { data } = await axios.get<any>(
-      `${API_BASE_URL}/wfmb2bapp/v2/parceiros/parceiro/${id_parceiro}`,
-      { headers }
-    );
-
+    const { data } = token
+      ? await axios.get<any>(
+          `${API_BASE_URL}/wfmb2bapp/v2/parceiros/parceiro/${id_parceiro}`,
+          { headers }
+        )
+      : await api.get<any>(
+          `${API_BASE_URL}/wfmb2bapp/v2/parceiros/parceiro/${id_parceiro}`
+        );
     return data;
   } catch (error) {
     console.error('erro ao buscar registro', error);

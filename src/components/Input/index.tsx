@@ -46,6 +46,7 @@ const Input: React.FC<InputProps> = ({
   flex,
   mask,
   keyboard,
+  ...rest
 }) => {
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
@@ -106,9 +107,11 @@ const Input: React.FC<InputProps> = ({
           editable={editable}
           mask={mask}
           keyboardType={keyboard}
+          {...rest}
         />
       ) : (
         <TextInput
+          {...rest}
           style={[
             inputStyle,
             showSearchIcon && { paddingLeft: 40 },
@@ -177,19 +180,39 @@ const Input: React.FC<InputProps> = ({
           style={styles.iconLeft}
         />
       )}
-      <TextInput
-        style={[inputStyle, showSearchIcon && { paddingLeft: 40 }]}
-        placeholder={placeholder}
-        secureTextEntry={secureTextEntry && !isPasswordVisible}
-        onFocus={() => setIsFocused(true)}
-        placeholderTextColor={theme.colors.primary.placeholder}
-        onBlur={() => setIsFocused(false)}
-        value={value}
-        onChangeText={onChangeText}
-        editable={editable}
-        multiline={isBigger}
-        textAlignVertical={isBigger ? 'top' : 'center'}
-      />
+
+      {mask ? (
+        <MaskInput
+          {...rest}
+          style={[inputStyle, showSearchIcon && { paddingLeft: 40 }]}
+          placeholder={placeholder}
+          secureTextEntry={secureTextEntry && !isPasswordVisible}
+          onFocus={() => setIsFocused(true)}
+          placeholderTextColor={theme.colors.primary.placeholder}
+          onBlur={() => setIsFocused(false)}
+          value={value}
+          onChangeText={onChangeText}
+          editable={editable}
+          multiline={isBigger}
+          textAlignVertical={isBigger ? 'top' : 'center'}
+          mask={mask}
+        />
+      ) : (
+        <TextInput
+          {...rest}
+          style={[inputStyle, showSearchIcon && { paddingLeft: 40 }]}
+          placeholder={placeholder}
+          secureTextEntry={secureTextEntry && !isPasswordVisible}
+          onFocus={() => setIsFocused(true)}
+          placeholderTextColor={theme.colors.primary.placeholder}
+          onBlur={() => setIsFocused(false)}
+          value={value}
+          onChangeText={onChangeText}
+          editable={editable}
+          multiline={isBigger}
+          textAlignVertical={isBigger ? 'top' : 'center'}
+        />
+      )}
     </View>
   );
 };

@@ -11,6 +11,7 @@ import Foundation from '@expo/vector-icons/Foundation';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '@theme/theme';
 import Icon from '@components/Icon';
+import { useNavigation } from '@react-navigation/native';
 
 interface Item {
   label: string;
@@ -47,7 +48,6 @@ export const ListCardProjects: React.FC<ListCardProps> = ({
   showInfoCard = true,
   isTechnicianSelected,
   highlightFirstItem = false,
-  menuOptions = [{ text: 'Detalhes', onPress: onPress }],
 }) => {
   const [isMenuVisible, setMenuVisible] = useState(false);
   const [showInfoToggle, setShowInfoToggle] = useState(showInfoCard);
@@ -59,7 +59,7 @@ export const ListCardProjects: React.FC<ListCardProps> = ({
   const handleShowInfo = () => {
     setShowInfoToggle((prev) => !prev);
   };
-
+  const navigation = useNavigation();
   return (
     <TouchableOpacity onPress={onPress} activeOpacity={0.7}>
       <View style={styles.container}>
@@ -85,18 +85,24 @@ export const ListCardProjects: React.FC<ListCardProps> = ({
         )}
         {isMenuVisible && (
           <View style={styles.menuContainer}>
-            {menuOptions.map((option, index) => (
-              <TouchableOpacity
-                key={index}
-                style={styles.menuOption}
-                onPress={() => {
-                  option.onPress();
-                  setMenuVisible(false);
-                }}
-              >
-                <Text style={styles.menuText}>{option.text}</Text>
-              </TouchableOpacity>
-            ))}
+            <TouchableOpacity
+              style={styles.menuOption}
+              onPress={() => {
+                onPress();
+                setMenuVisible(false);
+              }}
+            >
+              <Text style={styles.menuText}>Detalhes</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.menuOption}
+              onPress={() => {
+                navigation.navigate('OSClose' as never, data);
+                setMenuVisible(false);
+              }}
+            >
+              <Text style={styles.menuText}>Executar OS</Text>
+            </TouchableOpacity>
           </View>
         )}
         <View

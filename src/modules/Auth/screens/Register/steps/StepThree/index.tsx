@@ -34,7 +34,6 @@ const StepThree = ({ setDataRegister, dataRegister, step, setStep }: any) => {
     setError,
     clearErrors,
   } = useForm({
-    // Não utilizaremos um resolver; a validação será feita manualmente
     defaultValues: {
       agencia: dataRegister?.dados_bancarios?.agencia ?? '',
       agencia_dv: dataRegister?.dados_bancarios?.agencia_dv ?? '',
@@ -48,7 +47,6 @@ const StepThree = ({ setDataRegister, dataRegister, step, setStep }: any) => {
     },
   });
 
-  // Função de validação manual: todos os campos são obrigatórios
   const validateForm = (data: any) => {
     const newErrors: any = {};
     if (!data.id_banco || data.id_banco === '')

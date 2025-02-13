@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import Container from '@components/Container';
-import { Modal, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Modal, StyleSheet, View } from 'react-native';
 
 import { theme } from '@theme/theme';
 import Typograph from '@components/Typograph';
@@ -9,7 +9,11 @@ import Spacer from '@components/Spacer';
 import { ListCardShipments } from '@components/ListCardShipments';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { RootDrawerParamList } from '@routes/routes';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import {
+  useFocusEffect,
+  useNavigation,
+  useRoute,
+} from '@react-navigation/native';
 import { Feather, Ionicons, MaterialIcons } from '@expo/vector-icons';
 import Button from '@components/Button';
 import { acceptedRemessa, fetchShipments } from './services/shipments.services';
@@ -30,7 +34,7 @@ export default function ShipmentsScreen(props: any) {
   const { user } = useUserStore();
   const [filterModalVisible, setFilterModalVisible] = useState(false);
   const [filterCriteria, setFilterCriteria] = useState<FilterCriteriaShip>();
-
+  const [shipment, setShipment] = useState<RemessaProps>();
   const { setShipments, shipments, setLoading, loading } = useShipmentsStore();
   const navigation = useNavigation<ShipmentsScreenNavigationProp>();
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -45,7 +49,7 @@ export default function ShipmentsScreen(props: any) {
       setShipments,
       status: filterCriteria?.status,
       id_projeto: filterCriteria?.id_projeto,
-      perPage: 10,
+      perPage: 5,
       currentPage,
     });
   };
@@ -60,7 +64,7 @@ export default function ShipmentsScreen(props: any) {
     });
   }, [props.route?.params?.id]);
 
-  const handleAcceptShipment = async () => {
+  const handleAcceptShipment = async (shipment: any) => {
     await acceptedRemessa({
       setLoading,
       id_remessa,
@@ -70,6 +74,7 @@ export default function ShipmentsScreen(props: any) {
     await getShipments();
     setShowSuccessModal(false);
     setId_remessa(undefined);
+    navigation.navigate('ShipmentsDetails' as never, shipment);
   };
   const handlePressFilters = () => {
     setFilterModalVisible(true);
@@ -90,6 +95,11 @@ export default function ShipmentsScreen(props: any) {
       setCurrentPage((prev) => prev - 1);
     }
   };
+  useFocusEffect(
+    useCallback(() => {
+      getShipments();
+    }, [])
+  );
   return (
     <Container
       scrollEnabled
@@ -142,45 +152,61 @@ export default function ShipmentsScreen(props: any) {
                 Nenhuma remessa foi encontrada
               </Typograph>
             )}
-            {shipments?.remessas?.map((shipment: RemessaProps) => (
-              <View key={shipment.id_remessa} style={{ marginBottom: 16 }}>
-                <ListCardShipments
-                  header={{
-                    osNumber: `${shipment.identificador}`,
-                    hasAlert: false,
-                    onOptionsPress: () =>
-                      alert(`Opções pressionadas para OS ${'shipment.id'}`),
-                  }}
-                  data={shipment}
-                  highlightFirstItem={true}
-                  menuOptions={[
-                    {
-                      text: 'Ver Detalhes',
-                      onPress: () =>
-                        navigation.navigate(
-                          'ShipmentsDetails' as never,
-                          shipment
-                        ),
-                    },
-                    {
-                      text: 'Aceitar',
-                      onPress: () => {
-                        setId_remessa(shipment?.id_remessa);
-                        setShowSuccessModal(true);
-                      },
-                    },
-                  ]}
-                />
-              </View>
-            ))}
-
-            {shipments && shipments?.paginas > 1 && (
-              <PaginationControls
-                currentPage={currentPage}
-                totalPages={shipments?.paginas}
-                onNext={handleNextPage}
-                onPrev={handlePrevPage}
-              />
+            {loading ? (
+              <ActivityIndicator size={'large'} style={{ marginTop: 100 }} />
+            ) : (
+              <>
+                {shipments?.remessas?.map((shipment: RemessaProps) => (
+                  <View key={shipment.id_remessa} style={{ marginBottom: 16 }}>
+                    <ListCardShipments
+                      header={{
+                        osNumber: `${shipment.identificador}`,
+                        hasAlert: false,
+                        onOptionsPress: () =>
+                          alert(`Opções pressionadas para OS ${'shipment.id'}`),
+                      }}
+                      onPress={() =>
+                        navigation.navigate('ShipmentsDetails' as never, {
+                          ...shipment,
+                          currentPage,
+                        })
+                      }
+                      data={shipment}
+                      highlightFirstItem={true}
+                      // menuOptions={[
+                      //   {
+                      //     text: 'Ver Detalhes',
+                      //     onPress: () =>
+                      //       navigation.navigate(
+                      //         'ShipmentsDetails' as never,
+                      //         shipment
+                      //       ),
+                      //   },
+                      //   ...(shipment?.status !== 'FINALIZADA'
+                      //     ? [
+                      //         {
+                      //           text: 'Aceitar',
+                      //           onPress: () => {
+                      //             setShipment(shipment);
+                      //             setId_remessa(shipment?.id_remessa);
+                      //             setShowSuccessModal(true);
+                      //           },
+                      //         },
+                      //       ]
+                      //     : []),
+                      // ]}
+                    />
+                  </View>
+                ))}
+                {shipments && shipments?.paginas > 1 && (
+                  <PaginationControls
+                    currentPage={currentPage}
+                    totalPages={shipments?.paginas}
+                    onNext={handleNextPage}
+                    onPrev={handlePrevPage}
+                  />
+                )}
+              </>
             )}
           </>
         )}
@@ -212,7 +238,7 @@ export default function ShipmentsScreen(props: any) {
                 style={{ height: theme.sizes.extralarge }}
                 text="Confirmar Recebimento"
                 variant="secondary"
-                onPress={handleAcceptShipment}
+                onPress={() => handleAcceptShipment(shipment)}
               />
               <Spacer size="medium" />
               <Button

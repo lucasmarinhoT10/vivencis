@@ -1,22 +1,24 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Feather, Ionicons } from '@expo/vector-icons';
 import { theme } from '../../theme/theme';
 
 interface ImageUploaderProps {
   title?: string;
   fileName: string;
   onDeletePress: () => void;
-  handleSecond?: () => void;
+  onEditPress?: () => void; // Nova prop para editar
   onPress?: () => void;
+  iconType?: 'document' | 'image';
 }
 
 const ImageUploader: React.FC<ImageUploaderProps> = ({
   title,
   fileName,
   onDeletePress,
-  handleSecond,
+  onEditPress,
   onPress,
+  iconType = 'document',
 }) => {
   const [isMenuVisible, setMenuVisible] = useState(false);
 
@@ -30,11 +32,19 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
         {title && <Text style={styles.title}>{title}</Text>}
         <TouchableOpacity onPress={onPress}>
           <View style={styles.fileRow}>
-            <Ionicons
-              name="document-text-outline"
-              size={20}
-              color={theme.colors.primary.title}
-            />
+            {iconType === 'image' ? (
+              <Feather
+                name="image"
+                size={18}
+                color={theme.colors.primary.title}
+              />
+            ) : (
+              <Ionicons
+                name="document-text-outline"
+                size={20}
+                color={theme.colors.primary.title}
+              />
+            )}
             <Text style={styles.fileName}>{fileName}</Text>
           </View>
         </TouchableOpacity>
@@ -51,6 +61,17 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
       {/* Menu */}
       {isMenuVisible && (
         <View style={styles.menuContainer}>
+          {onEditPress && (
+            <TouchableOpacity
+              style={styles.menuOption}
+              onPress={() => {
+                onEditPress();
+                setMenuVisible(false);
+              }}
+            >
+              <Text style={styles.menuText}>Editar qualificação</Text>
+            </TouchableOpacity>
+          )}
           <TouchableOpacity
             style={styles.menuOption}
             onPress={() => {
@@ -60,17 +81,6 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
           >
             <Text style={styles.menuText}>Excluir qualificação</Text>
           </TouchableOpacity>
-          {handleSecond && (
-            <TouchableOpacity
-              style={styles.menuOption}
-              onPress={() => {
-                handleSecond();
-                setMenuVisible(false);
-              }}
-            >
-              <Text style={styles.menuText}>Ação 2</Text>
-            </TouchableOpacity>
-          )}
         </View>
       )}
     </View>
@@ -94,7 +104,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 2,
     elevation: 2,
-    position: 'relative', // Importante para posicionar o menu relativo ao cartão
+    position: 'relative', // Para posicionar o menu relativo ao cartão
   },
   content: {
     flex: 1,
@@ -121,7 +131,7 @@ const styles = StyleSheet.create({
   },
   menuContainer: {
     position: 'absolute',
-    bottom: 70, // Ajuste para exibir acima do botão (distância relativa à altura do menu)
+    bottom: 70, // Exibe acima do botão
     right: 10,
     backgroundColor: theme.colors.surface,
     borderRadius: 8,
@@ -131,7 +141,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 4,
     elevation: 10,
-    zIndex: 9999, // Garante que fique acima de outros elementos
+    zIndex: 9999,
   },
   menuOption: {
     paddingVertical: theme.spacing.small,

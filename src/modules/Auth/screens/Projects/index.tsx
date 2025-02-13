@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import Container from '@components/Container';
 import {
   ActivityIndicator,
@@ -7,13 +7,11 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-
 import Spacer from '@components/Spacer';
 import { theme } from '@theme/theme';
 import Typograph from '@components/Typograph';
-import Input from '@components/Input';
 
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 
 import { RootDrawerParamList } from '@routes/routes';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
@@ -27,13 +25,15 @@ import useOrdersStore from 'src/store/ordersStore';
 import { FilterModal } from '@components/FilterModal/Index';
 import { getStatus } from '../SignIn/services/login.services';
 import { PaginationOrders } from 'src/store/Models/Orders';
-import { MaterialIcons } from '@expo/vector-icons';
 import useTechniciansStore from 'src/store/techniciansStore';
 import { fetchTechnicians } from '../ManageTechnicians/services/technicians.services';
 import { PaginationControls } from '@components/Pagination';
+import Input from '@components/Input';
+import { useDebounce } from '@services/useDebounce';
 
 type ProjectsScreenNavigationProp =
   BottomTabNavigationProp<RootDrawerParamList>;
+
 export default function ProjectsScreen() {
   const [filterModal, setFilterModal] = useState(false);
   const [idTec, setIdTec] = useState(0);
@@ -42,15 +42,26 @@ export default function ProjectsScreen() {
     projeto: string;
     tecnico: string;
     grupo_status: string;
-  }>();
+    filter_os: string;
+  }>({ projeto: '', tecnico: '', grupo_status: '', filter_os: '' });
   const [currentPage, setCurrentPage] = useState(1);
+
+  const [osSearch, setOsSearch] = useState('');
+
+  const debouncedOsSearch = useDebounce(osSearch, 500);
+
+  useEffect(() => {
+    setFilter((prev) => ({
+      ...prev,
+      filter_os: debouncedOsSearch,
+    }));
+  }, [debouncedOsSearch]);
 
   const onClose = () => setFilterModal(false);
   const openFilterModal = () => setFilterModal(true);
 
   const { projects, setProjects, loading, setLoading } = useProjectsStore();
   const [paginationOrders, setPaginationOrders] = useState<PaginationOrders>();
-
   const itemsProject = projects?.map((item) => item.nome_projeto);
   const { setTechnicians, technicians } = useTechniciansStore();
 
@@ -62,9 +73,11 @@ export default function ProjectsScreen() {
   } = useOrdersStore();
   const navigation = useNavigation<ProjectsScreenNavigationProp>();
   const { user } = useUserStore();
+
   const handleProjectPress = (projectId: number) => {
     navigation.navigate('DetailsProjects' as never, { projectId });
   };
+
   const handleNextPage = () => {
     if (paginationOrders && currentPage < paginationOrders.paginas) {
       setCurrentPage((prev) => prev + 1);
@@ -84,15 +97,19 @@ export default function ProjectsScreen() {
       id_parceiro: user?.id_entidade,
     });
   };
+
   const getOrders = async () => {
+    if (!filter.filter_os) {
+      setLoadingOrders(true);
+    }
     await fetchOrders({
       setOrders,
-      setLoading,
+      setLoading: setLoadingOrders,
       setPaginationOrders,
       id_parceiro: user?.id_entidade,
       id_tecnico:
         technicians?.find((it) => it?.nome === filter?.tecnico)?.id ?? 0,
-      perPage: 10,
+      perPage: 5,
       currentPage,
       filter: {
         ...filter,
@@ -100,17 +117,22 @@ export default function ProjectsScreen() {
           ?.id_projeto,
       },
     });
+    if (!filter.filter_os) {
+      setLoadingOrders(false);
+    }
   };
+
   const getStatusData = async () => {
     const status = await getStatus({
       id_parceiro: user?.id_entidade,
     });
     setStatus(status?.status_analise);
   };
+
   const getTechnicians = async () => {
     await fetchTechnicians({
       id_parceiro: user?.id_entidade,
-      setLoading,
+      setLoading: () => {},
       setTechnicians,
     });
   };
@@ -118,6 +140,7 @@ export default function ProjectsScreen() {
   useEffect(() => {
     getTechnicians();
   }, []);
+
   useEffect(() => {
     getProjects();
     getStatusData();
@@ -128,7 +151,11 @@ export default function ProjectsScreen() {
       getOrders();
     }
   }, [user?.id_entidade, currentPage, idTec, filter]);
-
+  useFocusEffect(
+    useCallback(() => {
+      getProjects();
+    }, [])
+  );
   return (
     <Container
       scrollEnabled
@@ -141,7 +168,7 @@ export default function ProjectsScreen() {
       ) : (
         <View>
           {projects?.length ? (
-            projects?.map((project) => (
+            projects.map((project) => (
               <ProjectCard
                 key={project.id_projeto}
                 title={project.nome_projeto}
@@ -156,7 +183,7 @@ export default function ProjectsScreen() {
               {loading ? (
                 <ActivityIndicator />
               ) : (
-                <Typograph> Não há projetos disponiveis </Typograph>
+                <Typograph>Não há projetos disponiveis</Typograph>
               )}
             </>
           )}
@@ -166,15 +193,6 @@ export default function ProjectsScreen() {
             Ordens de serviço
           </Typograph>
           <View style={styles.orderButton}>
-            {/* <OrderButton
-            text="Ordenar"
-            onPress={handlePress}
-            iconName="chevron-small-down"
-            iconLibrary="Entypo"
-            size="medium"
-            color={theme.colors.secondary.contrastText}
-          /> */}
-
             <OrderButton
               text="Filtros"
               onPress={openFilterModal}
@@ -183,7 +201,18 @@ export default function ProjectsScreen() {
               size="small"
               color={theme.colors.secondary.contrastText}
             />
+            {/* Input para buscar pelo número da OS */}
+            <Input
+              showSearchIcon
+              name="Número da OS"
+              placeholder="Número da OS"
+              onChangeText={(text) => setOsSearch(text)}
+              value={osSearch}
+              keyboardType="numeric"
+            />
+            <Spacer size="small" />
           </View>
+
           {filterModal && (
             <FilterModal
               filter={filter}
@@ -195,6 +224,7 @@ export default function ProjectsScreen() {
               technicians={technicians}
             />
           )}
+
           <Spacer size="medium" />
           {loadingOrders ? (
             <ActivityIndicator />
@@ -222,20 +252,22 @@ export default function ProjectsScreen() {
             </Typograph>
           )}
 
-          {/* Controles de Paginação */}
-          {paginationOrders && paginationOrders.paginas > 1 && (
-            <PaginationControls
-              currentPage={currentPage}
-              totalPages={paginationOrders.paginas}
-              onNext={handleNextPage}
-              onPrev={handlePrevPage}
-            />
-          )}
+          {!loadingOrders &&
+            paginationOrders &&
+            paginationOrders.paginas > 1 && (
+              <PaginationControls
+                currentPage={currentPage}
+                totalPages={paginationOrders.paginas}
+                onNext={handleNextPage}
+                onPrev={handlePrevPage}
+              />
+            )}
         </View>
       )}
     </Container>
   );
 }
+
 const styles = StyleSheet.create({
   content: {
     justifyContent: 'flex-start',
@@ -252,12 +284,9 @@ const styles = StyleSheet.create({
   },
   title: {
     paddingLeft: theme.spacing.extraSmall,
-    justifyContent: 'flex-start',
-    alignItems: 'flex-start',
     fontSize: 16,
   },
   orderButton: {
-    flexDirection: 'row',
     borderBottomColor: theme.colors.border,
     borderBottomWidth: 1,
   },
@@ -286,7 +315,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    gap: 8,
   },
   paginationButtonText: {
     color: theme.colors.primary.labelValue,

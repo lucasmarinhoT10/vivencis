@@ -15,6 +15,9 @@ export type RootDrawerParamList = {
   Shipments: undefined;
   ShipmentsDetails: undefined;
   Profile: undefined;
+  ProfileTechnical: undefined;
+  PreRequisiteVoucher: undefined;
+  RegisteredCertifications: undefined;
   Extracts: undefined;
   ExtractsDetails: undefined;
   Inventory: undefined;

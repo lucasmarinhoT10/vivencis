@@ -23,6 +23,7 @@ import useUserStore from 'src/store/userStore';
 import { useNavigation } from '@react-navigation/native';
 import { delay } from '@utils/delay';
 import useTechniciansStore from 'src/store/techniciansStore';
+import { formatAndValidateDateInput, isValidDate } from '@utils/normalilze';
 
 const schema = yup.object().shape({
   namePersonResponsible: yup
@@ -88,6 +89,12 @@ const StepTwo: React.FC<StepTwoProps> = ({ setDataRegister, dataRegister }) => {
     if (!validade) {
       setValidadeError('Digite a validade');
       console.log('Erro: Validade não informada');
+      return;
+    }
+    // Valida a data informada
+    if (!isValidDate(validade)) {
+      setValidadeError('Data de validade inválida');
+      console.log('Erro: Data de validade inválida');
       return;
     }
 
@@ -161,146 +168,151 @@ const StepTwo: React.FC<StepTwoProps> = ({ setDataRegister, dataRegister }) => {
   };
 
   return (
-    <>
-      <View style={styles.content}>
-        <View>
-          <Typograph
-            variant="title"
-            textAlign="left"
-            fontWeight="500"
-            style={styles.title}
-          >
-            2. Serviços e qualificações
-          </Typograph>
-          <Spacer size="medium" />
-          <Line progress={0.7} height={8} />
-          <Spacer size="medium" />
-          <Typograph
-            variant="title"
-            textAlign="left"
-            fontWeight="500"
-            style={styles.title}
-          >
-            Qualificações
-          </Typograph>
-          <Spacer size="small" />
+    <View style={styles.content}>
+      <View>
+        <Typograph
+          variant="title"
+          textAlign="left"
+          fontWeight="500"
+          style={styles.title}
+        >
+          2. Serviços e qualificações
+        </Typograph>
+        <Spacer size="medium" />
+        <Line progress={0.7} height={8} />
+        <Spacer size="medium" />
+        <Typograph
+          variant="title"
+          textAlign="left"
+          fontWeight="500"
+          style={styles.title}
+        >
+          Qualificações
+        </Typograph>
+        <Spacer size="small" />
 
-          {qualifications.map((qualification) => (
-            <View key={qualification.uri} style={styles.fileCard}>
-              <ImageUploader
-                fileName={qualification.fileName}
-                onDeletePress={() =>
-                  setQualifications((prev) =>
-                    prev.filter((q) => q.uri !== qualification.uri)
-                  )
-                }
-              />
-            </View>
-          ))}
-          <Spacer size="small" />
-
-          <SelectDrop
-            title={'Qualificação'}
-            options={docsTipo?.map((it: any) => it?.descricao) ?? []}
-            setVisible={setVisible}
-            visible={visible}
-            setSelected={(item) => {
-              const selectedCodTipo =
-                docsTipo?.find((it: any) => it?.descricao === item)?.cod_tipo ||
-                '';
-              setDescription(selectedCodTipo);
-            }}
-            selected={
-              (docsTipo &&
-                description &&
-                docsTipo?.find((it: any) => it?.cod_tipo === description)
-                  ?.descricao) ??
-              description
-            }
-          />
-          <Spacer size="medium" />
-
-          <Input
-            placeholder="Digite a validade"
-            name=""
-            value={validade}
-            onChangeText={(it) => {
-              const numericValue = it.replace(/\D/g, '');
-              let formattedValue = numericValue;
-              if (numericValue.length > 2) {
-                formattedValue = `${numericValue.slice(0, 2)}/${numericValue.slice(2)}`;
+        {qualifications.map((qualification) => (
+          <View key={qualification.uri} style={styles.fileCard}>
+            <ImageUploader
+              fileName={qualification.fileName}
+              onDeletePress={() =>
+                setQualifications((prev) =>
+                  prev.filter((q) => q.uri !== qualification.uri)
+                )
               }
-              if (numericValue.length > 4) {
-                formattedValue = `${numericValue.slice(0, 2)}/${numericValue.slice(2, 4)}/${numericValue.slice(4, 8)}`;
-              }
-              setValidade(formattedValue);
-              setValidadeError(null);
-            }}
-            keyboardType="numeric"
-          />
-          {validadeError && (
-            <Typograph
-              variant="body"
-              textAlign="left"
-              fontWeight="400"
-              style={styles.errorText}
-            >
-              {validadeError}
-            </Typograph>
-          )}
-          <Spacer size="medium" />
-
-          <DownloadFile
-            iconType="file"
-            label="Anexar arquivo"
-            setSelectedImage={(uri: any) => {
-              setImageUriQualifications(uri);
-              setImageUriQualificationsError(null);
-            }}
-            selectedImage={imageUriQualifications}
-          />
-          {imageUriQualificationsError && (
-            <Typograph
-              textAlign="left"
-              fontWeight="400"
-              style={styles.errorText}
-            >
-              {imageUriQualificationsError}
-            </Typograph>
-          )}
-          <Spacer size="large" />
-
-          <TouchableOpacity onPress={handleAddQualification}>
-            <Typograph
-              variant="title"
-              textAlign="center"
-              fontWeight="500"
-              style={{
-                color: theme.colors.primary.link,
-                fontSize: theme.sizes.small,
-              }}
-            >
-              Adicionar qualificação
-            </Typograph>
-          </TouchableOpacity>
-
-          <Button
-            text="Finalizar cadastro"
-            variant="quaternary"
-            style={styles.button}
-            onPress={() => {
-              if (qualifications.length === 0) {
-                Alert.alert(
-                  'Nenhuma qualificação adicionada, adicione corretamente os seus dados'
+              onEditPress={() => {
+                setImageUriQualifications(qualification.uri);
+                setValidade(qualification.validade);
+                setDescription(qualification.description);
+                setQualifications((prev) =>
+                  prev.filter((q) => q.uri !== qualification.uri)
                 );
-              } else {
-                onSubmit();
-              }
+              }}
+            />
+          </View>
+        ))}
+
+        <Spacer size="small" />
+
+        <SelectDrop
+          title={'Qualificação'}
+          options={docsTipo?.map((it: any) => it?.descricao) ?? []}
+          setVisible={setVisible}
+          visible={visible}
+          setSelected={(item) => {
+            const selectedCodTipo =
+              docsTipo?.find((it: any) => it?.descricao === item)?.cod_tipo ||
+              '';
+            setDescription(selectedCodTipo);
+          }}
+          selected={
+            (docsTipo &&
+              description &&
+              docsTipo?.find((it: any) => it?.cod_tipo === description)
+                ?.descricao) ??
+            description
+          }
+        />
+        <Spacer size="medium" />
+
+        <Input
+          placeholder="Digite a validade"
+          name=""
+          value={validade}
+          onChangeText={(it) => {
+            const { value: formatted, error } = formatAndValidateDateInput(
+              it,
+              validade,
+              false
+            );
+            if (!error) {
+              setValidade(formatted);
+              setValidadeError(null);
+            } else {
+              setValidadeError(error);
+            }
+          }}
+          keyboardType="numeric"
+        />
+
+        {validadeError && (
+          <Typograph
+            variant="body"
+            textAlign="left"
+            fontWeight="400"
+            style={styles.errorText}
+          >
+            {validadeError}
+          </Typograph>
+        )}
+        <Spacer size="medium" />
+
+        <DownloadFile
+          iconType="file"
+          label="Anexar arquivo"
+          setSelectedImage={(uri: any) => {
+            setImageUriQualifications(uri);
+            setImageUriQualificationsError(null);
+          }}
+          selectedImage={imageUriQualifications}
+        />
+        {imageUriQualificationsError && (
+          <Typograph textAlign="left" fontWeight="400" style={styles.errorText}>
+            {imageUriQualificationsError}
+          </Typograph>
+        )}
+        <Spacer size="large" />
+
+        <TouchableOpacity onPress={handleAddQualification}>
+          <Typograph
+            variant="title"
+            textAlign="center"
+            fontWeight="500"
+            style={{
+              color: theme.colors.primary.link,
+              fontSize: theme.sizes.small,
             }}
-          />
-        </View>
+          >
+            Adicionar qualificação
+          </Typograph>
+        </TouchableOpacity>
+
+        <Button
+          text="Finalizar cadastro"
+          variant="quaternary"
+          style={styles.button}
+          onPress={() => {
+            if (qualifications.length === 0) {
+              Alert.alert(
+                'Nenhuma qualificação adicionada, adicione corretamente os seus dados'
+              );
+            } else {
+              onSubmit();
+            }
+          }}
+        />
       </View>
-    </>
+    </View>
   );
 };
 

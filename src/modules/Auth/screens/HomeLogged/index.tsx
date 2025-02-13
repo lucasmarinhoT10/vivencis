@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, View, ActivityIndicator } from 'react-native';
 import Container from '@components/Container';
 import Spacer from '@components/Spacer';
@@ -17,13 +17,16 @@ import ProjectFilterModal, {
   FilterCriteria,
 } from '@components/ProjectFilterModal';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { RootDrawerParamList } from '@routes/routes';
+import { getRegistro } from '../SignIn/services/login.services';
+import useRegisterStore from 'src/store/useRegisterStore';
 
 type HomeLoggedScreenNavigationProp =
   BottomTabNavigationProp<RootDrawerParamList>;
 
 function HomeLoggedScreen() {
+  const { setRegister } = useRegisterStore();
   const [filterModalVisible, setFilterModalVisible] = useState(false);
   const [filterCriteria, setFilterCriteria] = useState<FilterCriteria>({
     tipo: '',
@@ -39,9 +42,7 @@ function HomeLoggedScreen() {
   const [recommendedProjects, setRecommendedProjects] = useState<ProjectData[]>(
     []
   );
-  const [regionProjectsCarousel, setRegionProjectsCarousel] = useState<
-    ProjectData[]
-  >([]);
+
   const [regionProjectsList, setRegionProjectsList] = useState<ProjectData[]>(
     []
   );
@@ -70,30 +71,17 @@ function HomeLoggedScreen() {
     }
   };
 
-  const getRecommendedProjects = async () => {
-    if (!user?.id_entidade) return;
-    setLoadingRecommended(true);
-    await fetchProjects({
-      id_parceiro: user.id_entidade,
-      setProjects: setRecommendedProjects,
-      setLoading: setLoadingRecommended,
-      UF: '',
-      cidade: '',
-    });
-  };
-
-  const getRegionProjectsCarousel = async (uf: string, cidade: string) => {
-    if (!user?.id_entidade) return;
-    setLoadingRegion(true);
-    await fetchProjects({
-      id_parceiro: user.id_entidade,
-      UF: uf,
-      cidade: cidade,
-      setProjects: setRegionProjectsCarousel,
-      setLoading: setLoadingRegion,
-    });
-  };
-
+  // const getRecommendedProjects = async () => {
+  //   if (!user?.id_entidade) return;
+  //   setLoadingRecommended(true);
+  //   await fetchProjects({
+  //     id_parceiro: user.id_entidade,
+  //     setProjects: setRecommendedProjects,
+  //     setLoading: setLoadingRecommended,
+  //     UF: '',
+  //     cidade: '',
+  //   });
+  // };
   const getRegionProjectsList = async (
     uf: string,
     cidade: string,
@@ -102,7 +90,6 @@ function HomeLoggedScreen() {
     if (!user?.id_entidade) return;
     setLoadingRegion(true);
     await fetchProjects({
-      id_parceiro: user.id_entidade,
       UF: uf,
       cidade: cidade,
       setProjects: setRegionProjectsList,
@@ -119,25 +106,31 @@ function HomeLoggedScreen() {
 
   useEffect(() => {
     if (address.uf && address.cidade) {
-      getRegionProjectsCarousel(address.uf, address.cidade);
       getRegionProjectsList(address.uf, address.cidade);
     }
   }, [address]);
 
   useEffect(() => {
-    if (user?.id_entidade) {
-      getRecommendedProjects();
+    if (address.uf && address.cidade) {
+      getRegionProjectsList(address.uf, address.cidade);
     }
-  }, [user]);
+  }, [filterCriteria?.projeto]);
 
+  useFocusEffect(
+    useCallback(() => {
+      getRegionProjectsList(address.uf, address.cidade);
+      getRegisterData();
+    }, [])
+  );
   const handleSeeMore = () => {
-    navigation.navigate('Projetos' as never);
+    navigation.navigate('ProjectsRecommended' as never);
   };
-
-  const handlePress = () => {
-    console.log('Botão pressionado!');
+  const getRegisterData = async () => {
+    const data = await getRegistro({ id_parceiro: user?.id_entidade });
+    if (data) {
+      setRegister(data);
+    }
   };
-
   const handleProjectPress = (projectId: number, screenName: string) => {
     console.log('Projeto pressionado', projectId);
     navigation.navigate('DetailsProjects', { screenName, projectId } as never);
@@ -170,7 +163,7 @@ function HomeLoggedScreen() {
       <Typograph variant="title">Olá, {user?.nome}</Typograph>
       <Spacer size="medium" />
 
-      {recommendedProjects.length > 0 && (
+      {/* {recommendedProjects.length > 0 && (
         <ProjectCarousel
           title="Projetos recomendados"
           projects={recommendedProjects ?? []}
@@ -179,12 +172,12 @@ function HomeLoggedScreen() {
           }
           onSeeMore={handleSeeMore}
         />
-      )}
+      )} */}
 
-      {regionProjectsCarousel.length > 0 && (
+      {regionProjectsList.length > 0 && (
         <ProjectCarousel
           title="Projetos na sua região"
-          projects={regionProjectsCarousel ?? []}
+          projects={regionProjectsList ? regionProjectsList.slice(0, 5) : []}
           onPress={(id_projeto: any) =>
             handleProjectPress(id_projeto, 'HomeLogged')
           }

@@ -11,14 +11,12 @@ import {
 import { AntDesign } from '@expo/vector-icons';
 import { theme } from '@theme/theme';
 import Button from '@components/Button';
-import MaskInput from 'react-native-mask-input';
+import SelectDrop from '@components/SelectDrop';
+import { UF_OPTIONS } from '@utils/normalilze';
 
 export interface FilterCriteria {
-  tipo: string; // Serviço
-  projeto: string; // Projeto (ID ou nome)
-  status: string; // Status
-  tecnico: string; // Razão social do técnico
-  data: string; // Data de agendamento (DD/MM/AAAA)
+  uf: string;
+  cidade: string;
 }
 
 interface ProjectFilterModalProps {
@@ -27,34 +25,24 @@ interface ProjectFilterModalProps {
   onApply: (criteria: FilterCriteria) => void;
 }
 
-const FILTER_STATUS_OPTIONS = [
-  'AGUARDANDO ATENDIMENTO',
-  'CANCELADA',
-  'CORREÇÃO',
-  'EXECUTADA',
-  'IMPRODUTIVA',
-  'INSTALADA',
-];
-
-const FILTER_TIPO_OPTIONS = ['INSTALAÇÃO', 'ATG', 'CONTESTAÇÃO', 'ATG-I'];
-
 const ProjectFilterModal: React.FC<ProjectFilterModalProps> = ({
   visible,
   onClose,
   onApply,
 }) => {
-  const [selectedTipo, setSelectedTipo] = useState<string>('');
-  const [projeto, setProjeto] = useState<string>('');
-  const [selectedStatus, setSelectedStatus] = useState<string>('');
-  const [tecnico, setTecnico] = useState<string>('');
-  const [data, setData] = useState<string>('');
+  const [uf, setUf] = useState<string>('');
+  const [cidade, setCidade] = useState<string>('');
+  const [selectedUFVisible, setSelectedUFVisible] = useState(false);
 
-  const handleSelectTipo = (item: string) => {
-    setSelectedTipo((prev) => (prev === item ? '' : item));
+  const handleApply = () => {
+    onApply({ uf, cidade });
+    onClose();
   };
-
-  const handleSelectStatus = (item: string) => {
-    setSelectedStatus((prev) => (prev === item ? '' : item));
+  const handleClearFilters = () => {
+    setUf('');
+    setCidade('');
+    onApply({ uf: '', cidade: '' });
+    onClose();
   };
 
   return (
@@ -68,92 +56,39 @@ const ProjectFilterModal: React.FC<ProjectFilterModalProps> = ({
             </TouchableOpacity>
           </View>
           <ScrollView contentContainerStyle={styles.scrollContainer}>
-            {/* Filtro: Serviço */}
-            <Text style={styles.sectionTitle}>Serviço</Text>
-            <View style={styles.optionsContainer}>
-              {FILTER_TIPO_OPTIONS.map((item) => {
-                const isSelected = selectedTipo === item;
-                return (
-                  <TouchableOpacity
-                    key={item}
-                    style={[
-                      styles.optionButton,
-                      isSelected && styles.optionButtonSelected,
-                    ]}
-                    onPress={() => handleSelectTipo(item)}
-                  >
-                    <Text
-                      style={[
-                        styles.optionText,
-                        isSelected && styles.optionTextSelected,
-                      ]}
-                    >
-                      {item}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
+            {/* Filtro: UF */}
+            <Text style={styles.sectionTitle}>UF</Text>
+            <SelectDrop
+              title="Selecione o UF"
+              options={UF_OPTIONS}
+              visible={selectedUFVisible}
+              setVisible={setSelectedUFVisible}
+              setSelected={setUf}
+              selected={uf}
+            />
 
-            {/* Filtro: Status */}
-            <Text style={styles.sectionTitle}>Status</Text>
-            <View style={styles.optionsContainer}>
-              {FILTER_STATUS_OPTIONS.map((item) => {
-                const isSelected = selectedStatus === item;
-                return (
-                  <TouchableOpacity
-                    key={item}
-                    style={[
-                      styles.optionButton,
-                      isSelected && styles.optionButtonSelected,
-                    ]}
-                    onPress={() => handleSelectStatus(item)}
-                  >
-                    <Text
-                      style={[
-                        styles.optionText,
-                        isSelected && styles.optionTextSelected,
-                      ]}
-                    >
-                      {item}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-            {/* Filtro: Técnico */}
-            <Text style={styles.sectionTitle}>Técnico</Text>
+            {/* Filtro: Cidade */}
+            <Text style={styles.sectionTitle}>Cidade</Text>
             <TextInput
               style={styles.textInput}
-              placeholder="Razão social do técnico"
-              value={tecnico}
-              onChangeText={setTecnico}
-            />
-            {/* Filtro: Data Agendamento */}
-            <Text style={styles.sectionTitle}>Data Agendamento</Text>
-            <MaskInput
-              style={styles.textInput}
-              placeholder="DD/MM/AAAA"
-              value={data}
-              onChangeText={setData}
-              mask={[/\d/, /\d/, '/', /\d/, /\d/, '/', /\d/, /\d/, /\d/, /\d/]}
+              placeholder="Digite a cidade"
+              value={cidade}
+              onChangeText={setCidade}
             />
           </ScrollView>
-          <Button
-            text="Aplicar Filtros"
-            variant="quinary"
-            onPress={() => {
-              onApply({
-                tipo: selectedTipo,
-                projeto,
-                status: selectedStatus,
-                tecnico,
-                data,
-              });
-              onClose();
-            }}
-            style={{ marginTop: 10 }}
-          />
+          <View style={styles.buttonContainer}>
+            <Button
+              text="Aplicar Filtros"
+              onPress={handleApply}
+              variant="quinary"
+            />
+            <View style={{ height: 8 }} />
+            <Button
+              text="Limpar"
+              variant="secondary"
+              onPress={handleClearFilters}
+            />
+          </View>
         </View>
       </View>
     </Modal>
@@ -189,27 +124,6 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     marginVertical: 8,
   },
-  optionsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-  },
-  optionButton: {
-    backgroundColor: theme.colors.primary.gray,
-    borderRadius: 8,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    margin: 4,
-  },
-  optionButtonSelected: {
-    backgroundColor: theme.colors.primary.quaternary,
-  },
-  optionText: {
-    fontSize: 12,
-    color: theme.colors.primary.title,
-  },
-  optionTextSelected: {
-    color: '#fff',
-  },
   textInput: {
     borderWidth: 1,
     borderColor: theme.colors.border,
@@ -219,6 +133,10 @@ const styles = StyleSheet.create({
   },
   scrollContainer: {
     flexGrow: 1,
+  },
+  buttonContainer: {
+    justifyContent: 'space-between',
+    marginTop: 12,
   },
 });
 

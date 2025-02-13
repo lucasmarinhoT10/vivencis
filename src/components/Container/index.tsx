@@ -74,9 +74,11 @@ const Container: React.FC<ContainerProps> = ({
           />
         )}
         <ScrollView
+          nestedScrollEnabled={true} // <-- habilita scroll aninhado
           style={containerStyle}
           contentContainerStyle={{ flexGrow: 1 }}
           showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
         >
           {children}
         </ScrollView>
@@ -100,6 +102,7 @@ const Container: React.FC<ContainerProps> = ({
           onPressPrimary={handleHeader}
           isBack={hasGoBack}
           isDrawer={hasDrawer}
+          sizeText={sizeText}
         />
       )}
       <View style={containerStyle}>{children}</View>

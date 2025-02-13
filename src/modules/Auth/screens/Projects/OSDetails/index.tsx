@@ -2,11 +2,9 @@ import React, { useEffect, useState } from 'react';
 import Container from '@components/Container';
 import { Alert, Modal, StyleSheet, Text, View } from 'react-native';
 import { theme } from '@theme/theme';
-import { projectDetailsMock } from 'src/mocks/projectMock';
 import { useNavigation } from '@react-navigation/native';
 import { RootDrawerParamList } from '@routes/routes';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
-import { fetchProjectDetail } from '../services/project.services';
 import { OSCardInfo } from '@components/OSCardInfo';
 import Button from '@components/Button';
 import Spacer from '@components/Spacer';
@@ -47,13 +45,16 @@ export default function OSDetails(props: any) {
         style={{
           padding: 12,
           backgroundColor: theme.colors.primary.main,
+          // data?.status === 'CORRIGIR INSTALAÇÃO'
+          //   ? theme.colors.error.main
+          //   : theme.colors.primary.main,
           marginBottom: 12,
           borderRadius: 4,
         }}
       >
         <Text>
           <Text style={styles.value}>Atenção:</Text>
-          <Text style={styles.label}>
+          <Text style={styles?.label}>
             {' '}
             A ordem de serviço já está atrelada ao parceiro e deverá ser
             realizada até o dia {data?.dta_agendamento}.
@@ -71,7 +72,12 @@ export default function OSDetails(props: any) {
       <Spacer size="medium" />
       <Button
         variant="quaternary"
-        text="Executar ordem de serviço"
+        text={
+          'Executar ordem de serviço'
+          // data?.status === 'CORRIGIR INSTALAÇÃO'
+          //   ? 'Correção OS'
+          //   : 'Executar ordem de serviço'
+        }
         style={{ height: 48 }}
         onPress={() => {
           if (status === 'LIBERADO') {
@@ -84,6 +90,7 @@ export default function OSDetails(props: any) {
           }
         }}
       />
+
       <Spacer size="medium" />
       <Modal
         visible={isOpenModalConfirmation}
@@ -112,8 +119,13 @@ export default function OSDetails(props: any) {
               <Spacer size="medium" />
               <Input
                 name=""
-                maxLength={4}
-                onChangeText={(it) => setCPFValidation(it)}
+                keyboardType="numeric"
+                value={CPFValidation}
+                onChangeText={(text) => {
+                  const onlyDigits = text.replace(/\D/g, '');
+                  const onlyFour = onlyDigits.slice(0, 4);
+                  setCPFValidation(onlyFour);
+                }}
               />
             </View>
             <Spacer size="large" />
@@ -134,6 +146,11 @@ export default function OSDetails(props: any) {
                     CPFValidation === cpfRegistrado.substring(0, 4)
                   ) {
                     navigation.navigate('OSClose' as never, data);
+                    // if (data?.status === 'CORRIGIR INSTALAÇÃO') {
+                    //   navigation.navigate('OSCorrection' as never, data);
+                    // } else {
+                    //   navigation.navigate('OSClose' as never, data);
+                    // }
                     setIsOpenModalConfirmation(false);
                   } else {
                     Alert.alert(
@@ -162,6 +179,11 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '400',
     color: theme.colors.primary.contrastText,
+  },
+  labelAlert: {
+    fontSize: 12,
+    fontWeight: '400',
+    color: theme.colors.error.light,
   },
   value: {
     fontSize: 12,

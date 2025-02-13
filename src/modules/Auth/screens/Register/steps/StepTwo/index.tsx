@@ -76,6 +76,12 @@ const StepTwo = ({ setDataRegister, dataRegister, step, setStep }: any) => {
         if (cepData.id_cidade) {
           setValue('id_cidade', cepData.id_cidade, { shouldValidate: true });
         }
+        if (cepData.bairro) {
+          setValue('bairro', cepData.bairro, { shouldValidate: true });
+        }
+        if (cepData.endereco) {
+          setValue('logradouro', cepData.endereco, { shouldValidate: true });
+        }
       }
     }
   };

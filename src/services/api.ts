@@ -13,6 +13,7 @@ const api = axios.create({
 api.interceptors.request.use(
   async (config) => {
     const token = await AsyncStorage.getItem('userToken');
+    console.log(token)
     if(token === null){
       config.headers.Authkey = "Nc7GyueeNLUfLC7RRSpFUiiSQ";
       config.headers.Credential = "m86PPZxWZGwpcck";

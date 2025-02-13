@@ -29,19 +29,30 @@ interface PropsForm {
   nome_fantasia?: string;
 }
 
-/**
- * Função que define a máscara para CNAE de forma dinâmica.
- * Se o usuário tiver digitado 5 ou mais dígitos (apenas números), o traço será adicionado.
- * Caso contrário, o traço não é incluído.
- */
 const dynamicMaskCNAE = (value: string) => {
-  // Remove todos os caracteres que não são dígitos
   const digits = value.replace(/\D/g, '');
   if (digits.length >= 5) {
     return [/\d/, /\d/, '.', /\d/, /\d/, '-', /\d/];
   } else {
     return [/\d/, /\d/, '.', /\d/, /\d/];
   }
+};
+const formatCPF = (cpf: string): string => {
+  const digits = cpf.replace(/\D/g, '');
+  if (digits.length === 11) {
+    return digits.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+  }
+  return cpf;
+};
+
+const formatPhone = (phone: string): string => {
+  const digits = phone.replace(/\D/g, '');
+  if (digits.length === 11) {
+    return digits.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+  } else if (digits.length === 10) {
+    return digits.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
+  }
+  return phone;
 };
 
 const StepOne = ({ setDataRegister, dataRegister, step, setStep }: any) => {
@@ -54,6 +65,7 @@ const StepOne = ({ setDataRegister, dataRegister, step, setStep }: any) => {
     getValues,
     watch,
     setValue,
+    trigger,
   } = useForm<PropsForm>({
     resolver: yupResolver(schemaStepOne),
     mode: 'onChange',
@@ -64,7 +76,7 @@ const StepOne = ({ setDataRegister, dataRegister, step, setStep }: any) => {
       responsavel_cpf: dataRegister?.responsavel_cpf ?? '',
       telefone_contato: dataRegister?.telefone_contato ?? '',
       email: dataRegister?.email ?? '',
-      email_confirmation: dataRegister?.email_confirmation ?? '',
+      email_confirmation: dataRegister?.email ?? '',
       ie: dataRegister?.ie ?? '',
       im: dataRegister?.im ?? '',
       cnae01: dataRegister?.cnae01 ?? '',
@@ -77,7 +89,6 @@ const StepOne = ({ setDataRegister, dataRegister, step, setStep }: any) => {
     setDataRegister((prevData: any) => ({
       ...(prevData || {}),
       ...data,
-      // Preserva o endereço, se existir
       endereco: prevData?.endereco || {},
     }));
 
@@ -85,6 +96,14 @@ const StepOne = ({ setDataRegister, dataRegister, step, setStep }: any) => {
       setStep(step + 1);
     }
   };
+  useEffect(() => {
+    if (dataRegister?.responsavel_cpf) {
+      setValue('responsavel_cpf', formatCPF(dataRegister.responsavel_cpf));
+    }
+    if (dataRegister?.telefone_contato) {
+      setValue('telefone_contato', formatPhone(dataRegister.telefone_contato));
+    }
+  }, [dataRegister, setValue]);
 
   const fetchCNPJ = async (cnpj: string) => {
     if (!validateCNPJ(cnpj)) return;
@@ -103,7 +122,6 @@ const StepOne = ({ setDataRegister, dataRegister, step, setStep }: any) => {
         setValue('cnae01', data.cnae01);
       }
     }
-    // Atualiza o state mesclando os dados atuais com os novos e preserva o endereço
     setDataRegister((prevData: any) => ({
       ...(prevData || {}),
       razao_social: data.razao_social,
@@ -115,7 +133,6 @@ const StepOne = ({ setDataRegister, dataRegister, step, setStep }: any) => {
     }));
   };
 
-  // Sempre que o valor do CNPJ mudar, tenta buscar os dados via API
   useEffect(() => {
     const cnpj = getValues('cnpj');
     if (cnpj) {
@@ -123,6 +140,11 @@ const StepOne = ({ setDataRegister, dataRegister, step, setStep }: any) => {
     }
   }, [watch('cnpj')]);
 
+  useEffect(() => {
+    if (dataRegister?.isEdit) {
+      trigger();
+    }
+  }, [trigger, dataRegister?.isEdit]);
   return (
     <View style={styles.content}>
       <Typograph

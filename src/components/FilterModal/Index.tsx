@@ -147,6 +147,19 @@ export const FilterModal: React.FC<ModalConfirmationProps> = ({
     );
   };
 
+  const handleClearFilters = () => {
+    setSelectedTecno('');
+    setSelectedProjeto('');
+    setSelectedStatus([]);
+    setSelectedStatusGrupo('');
+    setSelectedEstagio([]);
+    setSelectedServico([]);
+    setSelectedPrazo([]);
+    setSelectedOrigem([]);
+    setFilter({});
+    onClose();
+  };
+
   return (
     <Modal transparent={true} visible={visible} animationType="slide">
       <View style={styles.modalBackground}>
@@ -450,7 +463,7 @@ export const FilterModal: React.FC<ModalConfirmationProps> = ({
             variant="quinary"
             color={theme.colors.primary.contrastText}
             text="Limpar"
-            onPress={handleFilters}
+            onPress={handleClearFilters}
             style={{
               height: 50,
               borderWidth: 1.5,

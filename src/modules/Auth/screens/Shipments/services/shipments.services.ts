@@ -11,7 +11,7 @@ interface ShipDataProps{
   status?: string
   dta_inicio?: string
   dta_fim?: string
-  perPage: number
+  perPage?: number
   currentPage?: number
 }
 interface ShipAcceptedProps{
@@ -36,12 +36,12 @@ export async function fetchShipments({
     
     const params = new URLSearchParams();
     if (id_projeto) params.append('id_projeto', `${id_projeto}`);
-    if (dta_inicio) params.append('dta_inicio', dta_inicio);
-    if (dta_fim) params.append('dta_fim', dta_fim);
-    if (status) params.append('status', status);
+    if (dta_inicio) params.append('filter_dta_inicio', dta_inicio);
+    if (dta_fim) params.append('filter_dta_fim', dta_fim);
+    if (status) params.append('filter_status', status);
     
     const { data } = await api.get<ApiResponseShipments>(
-      `/wfmb2bapp/v2/parceiros/estoque/remessas/${id_parceiro}?${params.toString()}&reg_por_pg=${perPage}&pg=${currentPage}`
+      `/wfmb2bapp/v2/parceiros/estoque/remessas/${id_parceiro}?${params.toString()}&reg_por_pg=${perPage ?? 5}&pg=${currentPage}`
     );
     
     setShipments(data ?? []);
@@ -61,10 +61,11 @@ export async function acceptedRemessa({id_remessa, id_user, setLoading}: ShipAcc
     } catch (error: any) {
       if(error?.response){
         setLoading(false)
-        return error?.response?.data
+        return {...error?.response?.data, success: false}
       } else{
         setLoading(false)
         console.error('projects error', error);
+        return {erro: 'Não foi possivel aceitar a remessa.', success: false}
       }
   }
 }

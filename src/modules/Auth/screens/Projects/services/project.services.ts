@@ -1,6 +1,6 @@
 import api from '@services/api';
 import { ProjectData, responseProjectsData } from 'src/store/Models/Project';
-import { PaginationOrders } from 'src/store/Models/Orders';
+import { OrdersProps, PaginationOrders } from 'src/store/Models/Orders';
 
 interface ProjectProps {
   UF?: string;
@@ -15,8 +15,8 @@ interface OrderProps {
   id_tecnico?: number;
   perPage?: number;
   currentPage?: number;
-  filter?: any
-  setOrders: (projects: ProjectData[]) => void;
+  filter?: any;
+  setOrders: (orders: OrdersProps[]) => void;
   setPaginationOrders: (ordersData: PaginationOrders) => void;
   setLoading: (loading: boolean) => void;
 }
@@ -30,6 +30,11 @@ interface ProjectDetailProps {
   setProject: (project: any) => void;
   setLoading: (loading: boolean) => void;
 }
+interface OsStatusProps {
+  id_parceiro: number;
+  id_os: number;
+  setLoading: (loading: boolean) => void;
+}
 interface ProductsProps {
   id_project: number;
   id_os: number;
@@ -39,7 +44,7 @@ interface ProductsProps {
 }
 interface SubscribeProps {
   id_project: number;
-  payload: any
+  payload: any;
   setLoading: (loading: boolean) => void;
 }
 
@@ -53,8 +58,10 @@ export async function fetchProjects({
 }: ProjectProps): Promise<any> {
   try {
     setLoading(true);
-    let url = `/wfmb2bapp/v2/projetos/lista?uf=${encodeURIComponent(UF)}&cidade=${encodeURIComponent(cidade)}&id_parceiro=${id_parceiro}`;
-
+    let url = `/wfmb2bapp/v2/projetos/lista?uf=${encodeURIComponent(UF)}&cidade=${encodeURIComponent(cidade)}`;
+    if(id_parceiro){
+      url += `&id_parceiro=${encodeURIComponent(id_parceiro)}`
+    }
     if (filters) {
       if (filters.status) {
         url += `&filter_status=${encodeURIComponent(filters.status)}`;
@@ -94,12 +101,13 @@ export async function fetchOrders({
   perPage,
   currentPage,
   setPaginationOrders,
-  filter
+  filter,
 }: OrderProps): Promise<any> {
   try {
     setLoading(true);
-    let url = await `/wfmb2bapp/v2/parceiros/ordens/${id_parceiro}/${id_tecnico}?reg_por_pg=${perPage}&pg=${currentPage}`
-    
+    let url =
+      await `/wfmb2bapp/v2/parceiros/ordens/${id_parceiro}/${id_tecnico}?reg_por_pg=${perPage}&pg=${currentPage}`;
+
     if (filter) {
       if (filter?.grupo_status) {
         url += `&filter_grupostatus=${encodeURIComponent(filter.grupo_status)}`;
@@ -107,11 +115,14 @@ export async function fetchOrders({
       if (filter.projeto) {
         url += `&filter_projeto=${encodeURIComponent(filter.projeto)}`;
       }
+      if (filter.filter_os) {
+        url += `&filter_os=${encodeURIComponent(filter.filter_os)}`;
+      }
     }
-    const { data } = await  api.get<any>(url)
+    const { data } = await api.get<any>(url);
     if (data) {
       setOrders(data.ordens);
-      setPaginationOrders(data)
+      setPaginationOrders(data);
       setLoading(false);
     } else {
       setOrders([]);
@@ -190,6 +201,24 @@ export async function fetchProjectDetail({
     console.error('projects error', error);
   }
 }
+export async function fetchOSstatus({
+  setLoading,
+  id_os,
+  id_parceiro
+}: OsStatusProps): Promise<any> {
+  try {
+    setLoading(true);
+    const { data } = await api.get<any>(
+      `/wfmb2bapp/v2/projetos//os/correcao/${id_parceiro}/${id_os}`
+    );
+
+    return data
+    
+  } catch (error) {
+    setLoading(false);
+    console.error('projects error', error);
+  }
+}
 export async function fetchProducts({
   id_project,
   id_os,
@@ -218,12 +247,15 @@ export async function fetchProducts({
 export async function subscribeProject({
   id_project,
   setLoading,
-  payload
+  payload,
 }: SubscribeProps): Promise<any> {
   try {
     setLoading(true);
-    const { data } = await api.post<any>(`/wfmb2bapp/v2/projetos/inscricao/${id_project}`, payload);
-    return data
+    const { data } = await api.post<any>(
+      `/wfmb2bapp/v2/projetos/inscricao/${id_project}`,
+      payload
+    );
+    return data;
   } catch (error: any) {
     if (error.response) {
       return error.response.data;

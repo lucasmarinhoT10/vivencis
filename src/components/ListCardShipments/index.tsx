@@ -77,7 +77,7 @@ export const ListCardShipments: React.FC<ListCardProps> = ({
               {(header.hasAlert ?? true) && (
                 <Foundation name="alert" size={22} color="#E02D3C" />
               )}
-              {header.onOptionsPress && (
+              {/* {header.onOptionsPress && (
                 <TouchableOpacity onPress={toggleMenu}>
                   <Ionicons
                     name="ellipsis-horizontal"
@@ -86,11 +86,11 @@ export const ListCardShipments: React.FC<ListCardProps> = ({
                     color={theme.colors.text.primary}
                   />
                 </TouchableOpacity>
-              )}
+              )} */}
             </View>
           </View>
         )}
-        {isMenuVisible && (
+        {/* {isMenuVisible && (
           <View style={styles.menuContainer}>
             {menuOptions.map((option, index) => (
               <TouchableOpacity
@@ -105,7 +105,7 @@ export const ListCardShipments: React.FC<ListCardProps> = ({
               </TouchableOpacity>
             ))}
           </View>
-        )}
+        )} */}
         <View
           style={[
             styles.card,

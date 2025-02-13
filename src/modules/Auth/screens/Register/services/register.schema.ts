@@ -33,7 +33,6 @@ export const schemaStepOne = yup.object().shape({
   responsavel_nome: yup.string().required('O nome do responsável é obrigatório'),
   responsavel_cpf: yup
     .string()
-    .matches(/^\d{3}\.\d{3}\.\d{3}-\d{2}$/, 'Formato de CPF inválido')
     .required('O CPF do responsável é obrigatório'),
   telefone_contato: yup
     .string()

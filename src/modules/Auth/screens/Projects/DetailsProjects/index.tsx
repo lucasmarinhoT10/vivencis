@@ -24,6 +24,7 @@ import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import OrderButton from '@components/OrderButton';
 import { ListCardProjects } from '@components/ListCardProjects';
 import {
+  fetchOrders,
   fetchProjectDetail,
   subscribeProject,
 } from '../services/project.services';
@@ -35,6 +36,9 @@ import { certificationMock } from 'src/mocks/certificationMock';
 import { ModalConfirmation } from '@components/Modal';
 import useOrdersStore from 'src/store/ordersStore';
 import useUserStore from 'src/store/userStore';
+import { OrdersProps, PaginationOrders } from 'src/store/Models/Orders';
+import { PaginationControls } from '@components/Pagination';
+import { useDebounce } from '@services/useDebounce';
 
 type DetailsProjectsScreenNavigationProp =
   BottomTabNavigationProp<RootDrawerParamList>;
@@ -54,8 +58,10 @@ export default function DetailsProjectsScreen(props: any) {
   const [data, setData] = useState<Projeto>();
   const [loading, setLoading] = useState(false);
   const [loadingSub, setLoadingSub] = useState(false);
-  const { orders } = useOrdersStore();
   const { user } = useUserStore();
+  const [paginationOrders, setPaginationOrders] = useState<PaginationOrders>();
+  const [osSearch, setOsSearch] = useState('');
+
   const navigation = useNavigation<DetailsProjectsScreenNavigationProp>();
   const getProject = async () => {
     await fetchProjectDetail({
@@ -64,21 +70,46 @@ export default function DetailsProjectsScreen(props: any) {
       setLoading,
     });
   };
-  useEffect(() => {
-    getProject();
-  }, [props?.route?.params?.projectId]);
   const route = useRoute();
   const homeLogged = route.params;
   const projects = route.params;
+  const [currentPage, setCurrentPage] = useState(1);
 
   const [routeName] = useState(homeLogged?.screenName);
 
-  const [modal, setModal] = useState(false);
+  const debouncedOsSearch = useDebounce(osSearch, 500);
 
+  const [modal, setModal] = useState(false);
+  const [orders, setOrders] = useState<OrdersProps[]>([]);
+  const getOrders = async () => {
+    if (!osSearch) {
+      setLoadingSub(true);
+    }
+    await fetchOrders({
+      setOrders,
+      setLoading: setLoadingSub,
+      setPaginationOrders,
+      id_parceiro: user?.id_entidade,
+      id_tecnico: 0,
+      perPage: 5,
+      currentPage,
+      filter: {
+        filter_os: debouncedOsSearch,
+        projeto: props?.route?.params?.projectId,
+      },
+    });
+    if (!osSearch) {
+      setLoadingSub(false);
+    }
+  };
+
+  useEffect(() => {
+    getOrders();
+  }, [currentPage, debouncedOsSearch]);
   const toggleModal = async () => {
     const response = await subscribeProject({
       setLoading: setLoadingSub,
-      id_project: data?.id_projeto,
+      id_project: data?.id_projeto ?? 0,
       payload: {
         id_parceiro: user?.id_entidade,
         id_usuario: user?.id,
@@ -102,8 +133,6 @@ export default function DetailsProjectsScreen(props: any) {
   const toggleModalNoCertified = () => {
     setModalNoCertified((prev) => !prev);
   };
-  console.log(routeName);
-
   const handleNavigateToAssignTechnician = (projectId: string) => {
     const selectedProject = projectDetailsMock.find(
       (project) => project.id === projectId
@@ -114,9 +143,22 @@ export default function DetailsProjectsScreen(props: any) {
       });
     }
   };
-  const handlePress = () => {
-    console.log('Botão pressionado!');
+  useEffect(() => {
+    getProject();
+  }, [props?.route?.params?.projectId]);
+
+  const handleNextPage = () => {
+    if (paginationOrders && currentPage < paginationOrders.paginas) {
+      setCurrentPage((prev) => prev + 1);
+    }
   };
+
+  const handlePrevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage((prev) => prev - 1);
+    }
+  };
+
   return (
     <Container
       scrollEnabled
@@ -191,66 +233,71 @@ export default function DetailsProjectsScreen(props: any) {
           {orders &&
           orders?.filter((it) => it?.id_projeto === data?.id_projeto)?.length >
             0 ? (
-            <Typograph variant="title" fontWeight="500" style={styles.title}>
-              Ordens de serviço
-            </Typograph>
-          ) : (
-            <Typograph
-              variant="title"
-              textAlign="center"
-              fontWeight="500"
-              style={styles.title}
-            >
-              Nenhuma ordem de serviço disponivel
-            </Typograph>
-          )}
-          {orders?.filter((it) => it.id_projeto === data?.id_projeto)
-            .length && (
             <>
-              <View style={styles.orderButton}>
-                {/* <OrderButton
-              text="Ordenar"
-              onPress={handlePress}
-              iconName="chevron-small-down"
-              iconLibrary="Entypo"
-              size="medium"
-              color={theme.colors.secondary.contrastText}
-            /> */}
-                {/* <OrderButton
-              text="Filtros"
-              onPress={handlePress}
-              iconName="sliders"
-              iconLibrary="FontAwesome"
-              size="small"
-              color={theme.colors.secondary.contrastText}
-            /> */}
-              </View>
+              <Typograph variant="title" fontWeight="500" style={styles.title}>
+                Ordens de serviço
+              </Typograph>
               <Input
                 showSearchIcon
                 name="Buscar ordens de serviço"
                 placeholder="Buscar ordens de serviço"
+                onChangeText={(text) => setOsSearch(text)}
+                value={osSearch}
               />
+            </>
+          ) : (
+            <>
+              <Input
+                showSearchIcon
+                name="Buscar ordens de serviço"
+                placeholder="Buscar ordens de serviço"
+                onChangeText={(text) => setOsSearch(text)}
+                value={osSearch}
+              />
+              <Typograph
+                variant="title"
+                textAlign="center"
+                fontWeight="500"
+                style={styles.title}
+              >
+                Nenhuma ordem de serviço disponivel
+              </Typograph>
             </>
           )}
           <Spacer size="medium" />
           <Spacer size="medium" />
-          {orders
-            ?.filter((it) => it.id_projeto === data?.id_projeto)
-            ?.map((item, index) => (
-              <View key={index} style={{ marginBottom: 16 }}>
-                <ListCardProjects
-                  header={{
-                    osNumber: `${item.numero_os}`,
-                    hasAlert: true,
-                    onOptionsPress: () => {},
-                  }}
-                  data={item}
-                  onPress={() =>
-                    navigation.navigate('OSDetails' as never, item)
-                  }
+          {loadingSub ? (
+            <ActivityIndicator size={'large'} style={{ marginTop: 80 }} />
+          ) : (
+            <>
+              {orders
+                ?.filter((it) => it.id_projeto === data?.id_projeto)
+                ?.map((item, index) => (
+                  <View key={index} style={{ marginBottom: 16 }}>
+                    <ListCardProjects
+                      header={{
+                        osNumber: `${item.numero_os}`,
+                        hasAlert: true,
+                        onOptionsPress: () => {},
+                      }}
+                      data={item}
+                      onPress={() =>
+                        navigation.navigate('OSDetails' as never, item)
+                      }
+                    />
+                  </View>
+                ))}
+
+              {paginationOrders && paginationOrders.paginas > 1 && (
+                <PaginationControls
+                  currentPage={currentPage}
+                  totalPages={paginationOrders.paginas}
+                  onNext={handleNextPage}
+                  onPrev={handlePrevPage}
                 />
-              </View>
-            ))}
+              )}
+            </>
+          )}
           {typeof routeName === 'string' && routeName === 'HomeLogged' && (
             <Button
               onPress={() => setModal(true)}

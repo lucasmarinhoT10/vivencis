@@ -1,5 +1,5 @@
 import Typograph from '@components/Typograph';
-import { AntDesign, Entypo, MaterialIcons } from '@expo/vector-icons';
+import { Entypo } from '@expo/vector-icons';
 import { theme } from '@theme/theme';
 import React from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';

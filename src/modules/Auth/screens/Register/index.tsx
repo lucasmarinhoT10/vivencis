@@ -86,10 +86,8 @@ const SignUpScreen: React.FC = (props: any) => {
       handlerPrimary={step === 1 ? navigation.goBack : () => setStep(step - 1)}
     >
       <View style={{ flex: 1 }}>
-        <ScrollView style={styles.parentView}>
-          <View style={styles.mainDiv}>{showStep()}</View>
-          <Spacer size="medium" />
-        </ScrollView>
+        <View style={styles.mainDiv}>{showStep()}</View>
+        <Spacer size="medium" />
       </View>
       <ModalConfirmation
         visible={modalVisible}
@@ -97,6 +95,7 @@ const SignUpScreen: React.FC = (props: any) => {
         subtitle="Seu cadastro foi realizado com sucesso, enquanto nosso time está analisando, você pode navegar em algumas funcionalidades normalmente."
         onClose={handleConfirm}
         onConfirm={handleConfirm}
+        okText="Ok"
       />
     </Container>
   );

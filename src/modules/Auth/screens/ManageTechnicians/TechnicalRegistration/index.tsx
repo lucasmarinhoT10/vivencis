@@ -10,15 +10,16 @@ import { RootDrawerParamList } from '@routes/routes';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import StepOne from './StepOne';
 import StepTwo from './StepTwo';
+import StepThree from './StepThree';
 
 type RegisterDocumentScreenNavigationProp =
   BottomTabNavigationProp<RootDrawerParamList>;
 
-const TechnicalRegistrationScreen: React.FC = () => {
+const TechnicalRegistrationScreen: React.FC = (props: any) => {
   const navigation = useNavigation<RegisterDocumentScreenNavigationProp>();
-  const [step, setStep] = useState(1);
-  const [data, setData] = useState<any>();
-
+  const [step, setStep] = useState(props?.route?.params?.isEdit ? 3 : 1);
+  const [data, setData] = useState<any>(props?.route?.params);
+  console.log('aqui', props?.route?.params);
   const showStep = () => {
     switch (step) {
       case 1:
@@ -39,6 +40,15 @@ const TechnicalRegistrationScreen: React.FC = () => {
             dataRegister={data}
           />
         );
+      case 3:
+        return (
+          <StepThree
+            setDataRegister={setData}
+            setStep={setStep}
+            step={step}
+            dataRegister={data}
+          />
+        );
       default:
         return (
           <StepOne
@@ -53,7 +63,9 @@ const TechnicalRegistrationScreen: React.FC = () => {
   return (
     <Container
       scrollEnabled
-      title="Cadastro de Técnico"
+      title={
+        props?.route?.params?.isEdit ? 'Editar Técnico' : 'Cadastro de Técnico'
+      }
       hasGoBack
       handlerPrimary={() => {
         if (step === 2) {

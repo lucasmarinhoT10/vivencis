@@ -21,12 +21,18 @@ import SignUpScreen from '@modules/Auth/screens/Register';
 import OSDetails from '@modules/Auth/screens/Projects/OSDetails';
 import OSClose from '@modules/Auth/screens/Projects/OSClose';
 import ManualOSClose from '@modules/Auth/screens/Projects/ManualOSClose';
-import { getTokenTemp } from '@modules/Auth/screens/Register/services/register.services';
-import useUserStore from 'src/store/userStore';
+
 import ChangePasswordScreen from '@modules/Auth/screens/ChangePasswordScreen';
 import AddProofScreen from '@modules/Auth/screens/Projects/UserWithoutCertificate/AddProof';
 import ExtractsScreen from '@modules/Auth/screens/Extracts';
 import ExtractsDetailsScreen from '@modules/Auth/screens/Extracts/ExtractsDetails';
+
+import OSCorrection from '@modules/Auth/screens/Projects/OSCorrection';
+
+import ProjectsRecommendedScreen from '@modules/Auth/screens/HomeLogged/ProjectsRecommended';
+import ProfileTechnicalScreen from '@modules/Auth/screens/Technical/ProfileTechnical';
+import PreRequisiteVoucherScreen from '@modules/Auth/screens/Profile/PreRequisiteVoucher';
+import RegisteredCertificationsScreen from '@modules/Auth/screens/Profile/RegisteredCertifications';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -35,6 +41,7 @@ const ProjectsStack = createNativeStackNavigator();
 const TechniciansStack = createNativeStackNavigator();
 const HomeStack = createNativeStackNavigator();
 const ProfileStack = createNativeStackNavigator();
+
 const ProjectsStackNavigator = () => {
   return (
     <ProjectsStack.Navigator screenOptions={{ headerShown: false }}>
@@ -45,6 +52,7 @@ const ProjectsStackNavigator = () => {
       />
       <ProjectsStack.Screen name="AddProof" component={AddProofScreen} />
       <ProjectsStack.Screen name="OSDetails" component={OSDetails} />
+      <ProjectsStack.Screen name="OSCorrection" component={OSCorrection} />
       <ProjectsStack.Screen name="OSClose" component={OSClose} />
       <ProjectsStack.Screen name="ManualOSClose" component={ManualOSClose} />
       <ProjectsStack.Screen
@@ -58,10 +66,16 @@ const HomeStackNavigator = () => {
   return (
     <HomeStack.Navigator screenOptions={{ headerShown: false }}>
       <HomeStack.Screen name="HomeLoggedScreen" component={HomeLoggedScreen} />
+
       <HomeStack.Screen
         name="DetailsProjects"
         component={DetailsProjectsScreen}
       />
+      <HomeStack.Screen
+        name="ProjectsRecommended"
+        component={ProjectsRecommendedScreen}
+      />
+      <ProjectsStack.Screen name="OSCorrection" component={OSCorrection} />
       <ProjectsStack.Screen name="OSDetails" component={OSDetails} />
       <ProjectsStack.Screen name="OSClose" component={OSClose} />
     </HomeStack.Navigator>
@@ -103,6 +117,18 @@ const ProfileStackNavigator = () => {
   return (
     <ProfileStack.Navigator screenOptions={{ headerShown: false }}>
       <ProfileStack.Screen name="Profile" component={ProfileScreen} />
+      <ProfileStack.Screen
+        name="ProfileTechnical"
+        component={ProfileTechnicalScreen}
+      />
+      <ProfileStack.Screen
+        name="PreRequisiteVoucher"
+        component={PreRequisiteVoucherScreen}
+      />
+      <ProfileStack.Screen
+        name="RegisteredCertifications"
+        component={RegisteredCertificationsScreen}
+      />
       <ProfileStack.Screen name="Extracts" component={ExtractsScreen} />
       <ProfileStack.Screen
         name="ExtractsDetails"
@@ -145,7 +171,6 @@ const LoggedInTabs = () => {
 const LoggedNavigator = () => {
   const { token } = useAuthStore();
   const isLogged = token !== '' && token !== null;
-
   return (
     <Stack.Navigator initialRouteName={isLogged ? 'HomeLogged' : 'SignIn'}>
       <Stack.Screen

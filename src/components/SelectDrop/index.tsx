@@ -90,62 +90,78 @@ const SelectDrop: React.FC<InputProps> = ({
           <Spacer />
         </>
       )}
-      <TouchableOpacity
+
+      {/* Container do dropdown */}
+      <View
         style={[
           noBorder ? styles.inputContainerWithoutBorder : styles.inputContainer,
         ]}
-        onPress={handleVisible}
-        activeOpacity={editable ? 0.7 : 1}
       >
-        <View
-          style={[
-            styles.itemTitle,
-            size ? { width: `${size}%` } : { width: '100%' },
-          ]}
+        {/* Cabeçalho que abre/fecha o dropdown */}
+        <TouchableOpacity
+          onPress={handleVisible}
+          activeOpacity={editable ? 0.7 : 1}
         >
-          <View style={{ flex: 1 }}>
-            <Typograph
-              variant="body"
-              color={
-                selected
-                  ? theme.colors.text.primary
-                  : theme.colors.primary.placeholder
-              }
-              numberOfLines={1}
-              textAlign="left"
-            >
-              {selected || title}
-            </Typograph>
-          </View>
-          {error && (
-            <TouchableOpacity
-              onPress={toggleErrorTooltip}
-              style={{ marginRight: 12 }}
-            >
-              <Feather
-                name="alert-circle"
-                size={24}
-                color={theme.colors.error.main}
-              />
-            </TouchableOpacity>
-          )}
-          <AntDesign
-            name={visible ? 'up' : 'down'}
-            size={16}
-            color={theme.colors.primary.placeholder}
-          />
-          {error && showErrorTooltip && (
-            <View style={styles.tooltip}>
-              <Text style={styles.errorMessage}>{error}</Text>
+          <View
+            style={[
+              styles.itemTitle,
+              size ? { width: `${size}%` } : { width: '100%' },
+            ]}
+          >
+            <View style={{ flex: 1 }}>
+              <Typograph
+                variant="body"
+                color={
+                  selected
+                    ? theme.colors.text.primary
+                    : theme.colors.primary.placeholder
+                }
+                numberOfLines={1}
+                textAlign="left"
+              >
+                {selected || title}
+              </Typograph>
             </View>
-          )}
-        </View>
-        {visible && editable && (
-          <View style={{ maxHeight: 120, width: '100%' }}>
-            <ScrollView>{options.map((it) => renderItem(it))}</ScrollView>
+            {error && (
+              <TouchableOpacity
+                onPress={toggleErrorTooltip}
+                style={{ marginRight: 12 }}
+              >
+                <Feather
+                  name="alert-circle"
+                  size={24}
+                  color={theme.colors.error.main}
+                />
+              </TouchableOpacity>
+            )}
+            <AntDesign
+              name={visible ? 'up' : 'down'}
+              size={16}
+              color={theme.colors.primary.placeholder}
+            />
+          </View>
+        </TouchableOpacity>
+
+        {/* Tooltip de erro */}
+        {error && showErrorTooltip && (
+          <View style={styles.tooltip}>
+            <Text style={styles.errorMessage}>{error}</Text>
           </View>
         )}
-      </TouchableOpacity>
+
+        {/* Lista de opções */}
+        {visible && editable && (
+          <View style={{ height: 120, width: '100%' }}>
+            <ScrollView
+              nestedScrollEnabled={true}
+              keyboardShouldPersistTaps="handled"
+              contentContainerStyle={{ flexGrow: 1 }}
+            >
+              {options.map((it) => renderItem(it))}
+            </ScrollView>
+          </View>
+        )}
+      </View>
     </>
   );
 };

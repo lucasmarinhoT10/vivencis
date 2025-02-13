@@ -162,6 +162,7 @@ function ChangePasswordScreen() {
         <Button
           text="Redefinir Senha"
           variant="quaternary"
+          style={{ height: 54 }}
           onPress={handleSubmit(onSubmit)}
         />
 
@@ -193,7 +194,7 @@ function ChangePasswordScreen() {
 const styles = StyleSheet.create({
   content: {
     flex: 1,
-    paddingHorizontal: theme.spacing.medium,
+    paddingHorizontal: theme.spacing.small,
   },
   errorContainer: {
     marginTop: 8,

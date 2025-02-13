@@ -10,6 +10,7 @@ import {
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { theme } from '@theme/theme';
 import Spacer from '@components/Spacer';
+import { useNavigation } from '@react-navigation/native';
 
 export interface Technician {
   id: number;
@@ -21,106 +22,72 @@ export interface Technician {
 }
 
 interface TechnicianCardProps {
-  technicians: Technician[]; // Lista de técnicos fornecida como prop
-  onTechnicianSelect?: (technician: Technician) => void; // Callback ao selecionar técnico
+  data: Technician;
 }
 
-const TechnicianCard: React.FC<TechnicianCardProps> = ({
-  technicians,
-  onTechnicianSelect,
-}) => {
-  const [selectedTechnician, setSelectedTechnician] =
-    useState<Technician | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [activeMenuId, setActiveMenuId] = useState<number | null>(null);
+const TechnicianCard: React.FC<TechnicianCardProps> = ({ data }) => {
+  const [visible, setVisible] = useState(false);
 
-  const toggleMenu = (id: number) => {
-    setActiveMenuId((prev) => (prev === id ? null : id));
+  const toggleMenu = () => {
+    setVisible(!visible);
   };
-
-  const filteredTechnicians = technicians.filter((tech) =>
-    tech.nome.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const handleTechnicianPress = (technician: Technician) => {
-    setSelectedTechnician(technician);
-    onTechnicianSelect?.(technician);
-  };
-
+  const navigation = useNavigation();
   return (
-    <View style={styles.container}>
-      <Spacer size="medium" />
-      <FlatList
-        data={filteredTechnicians}
-        keyExtractor={(item) => `${item.id}`}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            style={styles.technicianCard}
-            onPress={() => handleTechnicianPress(item)}
-          >
-            <View style={styles.row}>
-              <View style={styles.user}>
-                <Feather
-                  name="user"
-                  size={20}
-                  color={theme.colors.primary.link}
-                />
-              </View>
-              <View style={styles.details}>
-                <View style={styles.header}>
-                  <Text style={styles.name}>{item.nome}</Text>
-                  {/* <TouchableOpacity onPress={() => toggleMenu(item.id)}>
-                    <Ionicons
-                      name="ellipsis-horizontal"
-                      size={20}
-                      style={{ alignItems: 'flex-end' }}
-                      color={theme.colors.text.primary}
-                    />
-                  </TouchableOpacity> */}
-                </View>
+    <TouchableOpacity
+      style={styles.technicianCard}
+      onPress={() => toggleMenu()}
+    >
+      <View style={styles.row}>
+        <View style={styles.user}>
+          <Feather name="user" size={20} color={theme.colors.primary.link} />
+        </View>
+        <View style={styles.details}>
+          <View style={styles.header}>
+            <Text style={styles.name}>{data.nome}</Text>
+            <TouchableOpacity onPress={() => toggleMenu()}>
+              <Ionicons
+                name="ellipsis-horizontal"
+                size={20}
+                style={{ alignItems: 'flex-end' }}
+                color={theme.colors.text.primary}
+              />
+            </TouchableOpacity>
+          </View>
 
-                <View style={styles.description}>
-                  <View style={styles.infoGroup}>
-                    <Text style={styles.infoLabel}>CPF:</Text>
-                    <Text style={styles.infoValue}>{item?.cpf}</Text>
-                  </View>
-                  <View style={styles.infoGroup}>
-                    <Text style={styles.infoLabel}>Celular:</Text>
-                    <Text style={styles.infoValue}>{item.celular}</Text>
-                  </View>
-                  <View style={styles.infoGroup}>
-                    <Text style={styles.infoLabel}>OS atribuidas:</Text>
-                    <Text style={styles.infoValue}>{item.os_atribuidas}</Text>
-                  </View>
-                </View>
-              </View>
+          <View style={styles.description}>
+            <View style={styles.infoGroup}>
+              <Text style={styles.infoLabel}>CPF:</Text>
+              <Text style={styles.infoValue}>{data?.cpf}</Text>
             </View>
-            <Spacer size="small" />
-            {/* {activeMenuId === item.id && (
-              <View style={styles.menuContainer}>
-                <TouchableOpacity
-                  style={styles.menuOption}
-                  onPress={() => {
-                    setActiveMenuId(null);
-                  }}
-                >
-                  <Text style={styles.menuText}>Itens</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.menuOption}
-                  onPress={() => {
-                    console.log('Ação 2');
-                    setActiveMenuId(null);
-                  }}
-                >
-                  <Text style={styles.menuText}>Aceite</Text>
-                </TouchableOpacity>
-              </View>
-            )} */}
+            <View style={styles.infoGroup}>
+              <Text style={styles.infoLabel}>Celular:</Text>
+              <Text style={styles.infoValue}>{data.celular}</Text>
+            </View>
+            <View style={styles.infoGroup}>
+              <Text style={styles.infoLabel}>OS atribuidas:</Text>
+              <Text style={styles.infoValue}>{data.os_atribuidas}</Text>
+            </View>
+          </View>
+        </View>
+      </View>
+      <Spacer size="small" />
+      {visible && (
+        <View style={styles.menuContainer}>
+          <TouchableOpacity
+            style={styles.menuOption}
+            onPress={() => {
+              navigation?.navigate('TechnicalRegistration' as never, {
+                ...data,
+                isEdit: true,
+              });
+              setVisible(false);
+            }}
+          >
+            <Text style={styles.menuText}>Editar</Text>
           </TouchableOpacity>
-        )}
-      />
-    </View>
+        </View>
+      )}
+    </TouchableOpacity>
   );
 };
 

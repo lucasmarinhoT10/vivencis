@@ -131,7 +131,7 @@ export const OSCardInfo: React.FC<ListCardProps> = ({
               <>
                 <View style={styles.item}>
                   <Text style={styles.label}>Num. OS</Text>
-                  <Text style={styles.value}>{data?.id_os ?? '-'}</Text>
+                  <Text style={styles.value}>{data?.numero_os ?? '-'}</Text>
                 </View>
                 <View style={styles.item}>
                   <Text style={styles.label}>Estágio</Text>

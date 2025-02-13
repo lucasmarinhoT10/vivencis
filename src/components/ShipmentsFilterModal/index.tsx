@@ -14,6 +14,7 @@ import Button from '@components/Button';
 import MaskInput from 'react-native-mask-input';
 import useProjectsStore from 'src/store/projectsStore';
 import SelectDrop from '@components/SelectDrop';
+import { formatAndValidateDateInput } from '@utils/normalilze';
 
 interface ProjectFilterModalProps {
   visible: boolean;
@@ -37,7 +38,7 @@ const ShipmentsFilterModal: React.FC<ProjectFilterModalProps> = ({
   const [visiblePro, setVisiblePro] = useState(false);
   const [projeto, setProjeto] = useState<string>();
   const [selectedStatus, setSelectedStatus] = useState<string>();
-  const [dataInicio, setDataInicio] = useState<string>();
+  const [dataInicio, setDataInicio] = useState<string>('');
   const [dataFim, setDataFim] = useState<string>();
   useEffect(() => {
     setProjeto(
@@ -45,7 +46,9 @@ const ShipmentsFilterModal: React.FC<ProjectFilterModalProps> = ({
         ?.nome_projeto
     );
     setSelectedStatus(filters?.status);
-    setDataInicio(filters?.dataInicio);
+    if (filters?.dataInicio) {
+      setDataInicio(filters?.dataInicio);
+    }
     setDataFim(filters?.dataFim);
   }, [filters]);
   const handleSelectStatus = (item: string) => {
@@ -124,7 +127,13 @@ const ShipmentsFilterModal: React.FC<ProjectFilterModalProps> = ({
                   style={styles.textInput}
                   placeholder="DD/MM/AAAA"
                   value={dataInicio}
-                  onChangeText={setDataInicio}
+                  onChangeText={(it) => {
+                    const { value: formatted, error } =
+                      formatAndValidateDateInput(it, dataInicio, true);
+                    if (!error) {
+                      setDataInicio(formatted);
+                    }
+                  }}
                   mask={[
                     /\d/,
                     /\d/,
@@ -145,7 +154,13 @@ const ShipmentsFilterModal: React.FC<ProjectFilterModalProps> = ({
                   style={styles.textInput}
                   placeholder="DD/MM/AAAA"
                   value={dataFim}
-                  onChangeText={setDataFim}
+                  onChangeText={(it) => {
+                    const { value: formatted, error } =
+                      formatAndValidateDateInput(it, dataInicio, true);
+                    if (!error) {
+                      setDataFim(formatted);
+                    }
+                  }}
                   mask={[
                     /\d/,
                     /\d/,
@@ -189,8 +204,8 @@ const ShipmentsFilterModal: React.FC<ProjectFilterModalProps> = ({
               });
               setSelectedStatus(undefined);
               setProjeto(undefined);
-              setDataFim(undefined);
-              setDataInicio(undefined);
+              setDataFim('');
+              setDataInicio('');
               onClose();
             }}
             style={{ marginTop: 15 }}

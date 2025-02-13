@@ -38,6 +38,23 @@ export async function registerUser({ setLoading, payload, tokenTemp, isEdit}: an
     }
   }
 }
+export async function addVoucherUser({ setLoading, payload}: any): Promise<any> {
+  try {
+    setLoading(true)
+    
+    const {data} = await api.put<any>(`${API_BASE_URL}/wfmb2bapp/v2/parceiros/parceiro`,  {...payload})
+    setLoading(false)
+    return data;
+  } catch (error: any) {
+    setLoading(false);
+    if (error.response) {
+      return {...error.response.data, success: false};
+    } else {
+      console.error("Erro inesperado:", error);
+      return {erro: 'Erro inesperado, verifique se seus dados estão corretos',success: false}; 
+    }
+  }
+}
 export async function getCNPJ({ setLoading, cnpj, tokenTemp}: any): Promise<any> {
   try {
     setLoading(true)
@@ -63,7 +80,7 @@ export async function getCEP({ setLoading, cep, tokenTemp}: any): Promise<any> {
       Authorization: `Bearer ${tokenTemp}`,
     }
 
-    const {data} = await axios.get<any>(`${API_BASE_URL}/wfmb2bapp/v2/parceiros/cidade/${cep}`, {headers});
+    const {data} = await axios.get<any>(`${API_BASE_URL}/wfmb2bapp/v2/parceiros/endereco?cep=${cep}`, {headers});
     setLoading(false)
     return data
   } catch (error) {

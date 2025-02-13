@@ -21,6 +21,7 @@ import {
 import useAuthStore from 'src/store/authStore';
 import { Masks } from 'react-native-mask-input';
 import SelectDrop from '@components/SelectDrop';
+import { formatAndValidateDateInput } from '@utils/normalilze';
 
 const schemaStepFour = yup.object().shape({
   cnpj: yup.string().required('O cartão CNPJ é obrigatório'),
@@ -300,18 +301,17 @@ const StepFour = ({
           name=""
           value={validade ?? ''}
           onChangeText={(it) => {
-            const numericValue = it.replace(/\D/g, '');
-
-            let formattedValue = numericValue;
-            if (numericValue.length > 2) {
-              formattedValue = `${numericValue.slice(0, 2)}/${numericValue.slice(2)}`;
+            const { value: formatted, error } = formatAndValidateDateInput(
+              it,
+              validade ?? '',
+              false
+            );
+            if (!error) {
+              setValidade(formatted);
+              setValidadeError(null);
+            } else {
+              setValidadeError(error);
             }
-            if (numericValue.length > 4) {
-              formattedValue = `${numericValue.slice(0, 2)}/${numericValue.slice(2, 4)}/${numericValue.slice(4, 8)}`;
-            }
-
-            setValidade(formattedValue);
-            setValidadeError(null);
           }}
           keyboardType="numeric"
         />

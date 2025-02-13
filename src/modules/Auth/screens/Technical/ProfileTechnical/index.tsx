@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, TouchableOpacity, Linking } from 'react-native';
+import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import {
   Feather,
   Ionicons,
@@ -17,14 +17,14 @@ import { useNavigation } from '@react-navigation/native';
 import useUserStore from 'src/store/userStore';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { RootDrawerParamList } from '@routes/routes';
-import SuportIcon from '@assets/svgs/Suport';
 
-type ProfileScreenNavigationProp = BottomTabNavigationProp<RootDrawerParamList>;
+type ProfileTechnicalScreenNavigationProp =
+  BottomTabNavigationProp<RootDrawerParamList>;
 
-export default function ProfileScreen() {
+export default function ProfileTechnicalScreen() {
   const { logoutUser } = useAuthStore();
   const { removeUser } = useUserStore();
-  const navigation = useNavigation<ProfileScreenNavigationProp>();
+  const navigation = useNavigation<ProfileTechnicalScreenNavigationProp>();
   const handleLogout = async () => {
     try {
       await logoutUser();
@@ -57,25 +57,6 @@ export default function ProfileScreen() {
         </View>
         <Spacer size="extraLarge" />
 
-        {/* <ListItem
-          title="Extratos"
-          spacerHorizontal="medium"
-          left={() => (
-            <MaterialIcons
-              name="currency-exchange"
-              size={24}
-              color={theme.colors.primary.title}
-            />
-          )}
-          right={() => (
-            <Ionicons
-              name="chevron-forward"
-              size={20}
-              color={theme.colors.primary.title}
-            />
-          )}
-          onPress={() => navigation.navigate('Extracts')}
-        /> */}
         <ListItem
           title="Comprovantes de pré-requisito"
           spacerHorizontal="medium"
@@ -93,7 +74,7 @@ export default function ProfileScreen() {
               color={theme.colors.primary.title}
             />
           )}
-          onPress={() => navigation.navigate('PreRequisiteVoucher')}
+          onPress={() => navigation.navigate('PreRequisiteVoucher' as never)}
         />
         <ListItem
           title="Certificações"
@@ -127,20 +108,7 @@ export default function ProfileScreen() {
               color={theme.colors.primary.title}
             />
           )}
-          onPress={() => navigation.navigate('RecoverPassword' as never)}
-        />
-        <ListItem
-          title="Falar com suporte"
-          spacerHorizontal="medium"
-          left={() => <SuportIcon />}
-          right={() => (
-            <Ionicons
-              name="chevron-forward"
-              size={20}
-              color={theme.colors.primary.title}
-            />
-          )}
-          // onPress={() => Linking.openURL('')}
+          //   onPress={() => navigation.navigate('RecoverPassword' as never)}
         />
       </View>
       <View
@@ -155,7 +123,7 @@ export default function ProfileScreen() {
           <Typograph
             fontWeight="600"
             variant="title"
-            color={theme.colors.primary.button}
+            color={theme.colors.warning}
           >
             Sair
           </Typograph>

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Container from '@components/Container';
-import { Modal, StyleSheet, View } from 'react-native';
+import { Alert, Modal, StyleSheet, View } from 'react-native';
 
 import { theme } from '@theme/theme';
 import { ShipmentsList } from '@components/ShipmentsList';
@@ -16,13 +16,14 @@ import {
 } from '../services/shipments.services';
 import useUserStore from 'src/store/userStore';
 import useShipmentsStore from 'src/store/shipmentsStore';
+import { RemessaProps } from 'src/store/Models/Shipments';
 
 export default function ShipmentsDetailsScreen(props: any) {
-  const [data, setdata] = useState(props.route.params);
+  const [data, setdata] = useState<RemessaProps>(props.route.params);
   const { user } = useUserStore();
   const { setShipments, shipments } = useShipmentsStore();
-  const [isAccepted, setIsAccepted] = useState(false);
-  const [acceptDate, setAcceptDate] = useState('');
+  const [isAccepted, setIsAccepted] = useState(data?.status === 'FINALIZADA');
+  const [acceptDate, setAcceptDate] = useState(data?.data ?? '');
   const [loading, setLoading] = useState(false);
   const handleAcceptShipment = async () => {
     const response = await acceptedRemessa({
@@ -30,12 +31,17 @@ export default function ShipmentsDetailsScreen(props: any) {
       id_remessa: data?.id_remessa,
       id_user: user?.id,
     });
-    setIsAccepted(true);
-    const today = moment(new Date().getTime()).format('DD/MM/YYYY');
+    if (response?.success) {
+      setIsAccepted(true);
+      const today = moment(new Date().getTime()).format('DD/MM/YYYY');
+      setAcceptDate(`${today}`);
+      setShowSuccessModal(false);
+    } else {
+      setShowSuccessModal(false);
+      Alert?.alert('Erro', response?.erro);
+    }
 
-    setAcceptDate(`${today}`);
     await getShipments();
-    setShowSuccessModal(false);
   };
 
   const getShipments = async () => {
@@ -43,6 +49,8 @@ export default function ShipmentsDetailsScreen(props: any) {
       id_parceiro: user?.id_entidade,
       setLoading,
       setShipments,
+      currentPage: props?.route?.params?.currentPage ?? 1,
+      perPage: 5,
     });
   };
   const [showSuccessModal, setShowSuccessModal] = useState(false);

@@ -55,7 +55,7 @@ const StepOne: React.FC<StepOneProps> = ({
       nome: dataRegister?.nome || '',
       cpf: dataRegister?.cpf || '',
       email: dataRegister?.email || '',
-      confirmEmail: dataRegister?.confirmEmail || '',
+      confirmEmail: dataRegister?.email || '',
     },
   });
 
