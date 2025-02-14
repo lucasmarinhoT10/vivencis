@@ -6,6 +6,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import LoggedNavigator from '@routes/LoggedNavigator';
 import Toast from 'react-native-toast-message';
 import * as SplashScreen from 'expo-splash-screen';
+import * as Location from 'expo-location';
 
 import {
   useFonts,
@@ -60,6 +61,18 @@ export default function App() {
     }
     getToken();
   }, []);
+
+  useEffect(() => {
+    (async () => {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        alert(
+          'Permissão para acessar a localização é necessária para o funcionamento do app.'
+        );
+      }
+    })();
+  }, []);
+
   if (!appIsReady || !fontsLoaded) {
     return null;
   }

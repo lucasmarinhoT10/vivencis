@@ -8,6 +8,7 @@ interface ProjectCardProps {
   endDate: string;
   description: string;
   onPress?: () => void;
+  place?: string;
 }
 
 const ProjectCard: React.FC<ProjectCardProps> = ({
@@ -16,6 +17,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
   endDate,
   description,
   onPress,
+  place,
 }) => {
   return (
     <TouchableOpacity onPress={onPress} activeOpacity={0.7}>
@@ -26,6 +28,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
           {startDate} a {endDate}
         </Text>
         <Text style={styles.description}>{description}</Text>
+        {place && <Text style={styles.label}>{place}</Text>}
       </View>
     </TouchableOpacity>
   );

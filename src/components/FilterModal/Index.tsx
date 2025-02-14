@@ -79,6 +79,7 @@ export const FilterModal: React.FC<ModalConfirmationProps> = ({
   itemsSelect,
   technicians,
 }) => {
+  console.log(technicians);
   const [selectedVisible, setSelectedVisible] = useState(false);
   const [selectedVisibleTech, setSelectedVisibleTech] = useState(false);
   const [selectedTecno, setSelectedTecno] = useState(filter?.tecnico);

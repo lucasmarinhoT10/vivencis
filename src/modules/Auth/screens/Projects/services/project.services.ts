@@ -59,8 +59,8 @@ export async function fetchProjects({
   try {
     setLoading(true);
     let url = `/wfmb2bapp/v2/projetos/lista?uf=${encodeURIComponent(UF)}&cidade=${encodeURIComponent(cidade)}`;
-    if(id_parceiro){
-      url += `&id_parceiro=${encodeURIComponent(id_parceiro)}`
+    if (id_parceiro) {
+      url += `&id_parceiro=${encodeURIComponent(id_parceiro)}`;
     }
     if (filters) {
       if (filters.status) {
@@ -204,16 +204,15 @@ export async function fetchProjectDetail({
 export async function fetchOSstatus({
   setLoading,
   id_os,
-  id_parceiro
+  id_parceiro,
 }: OsStatusProps): Promise<any> {
   try {
     setLoading(true);
     const { data } = await api.get<any>(
-      `/wfmb2bapp/v2/projetos//os/correcao/${id_parceiro}/${id_os}`
+      `/wfmb2bapp/v2/projetos/os/correcao/${id_parceiro}/${id_os}`
     );
 
-    return data
-    
+    return data;
   } catch (error) {
     setLoading(false);
     console.error('projects error', error);

@@ -132,8 +132,12 @@ export default function ProjectsScreen() {
   const getTechnicians = async () => {
     await fetchTechnicians({
       id_parceiro: user?.id_entidade,
-      setLoading: () => {},
+      setLoading,
       setTechnicians,
+      perPage: 100,
+      currentPage,
+      setPagination: () => {},
+      filterCriteria: {},
     });
   };
 

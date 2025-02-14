@@ -140,7 +140,12 @@ export default function ProfileScreen() {
               color={theme.colors.primary.title}
             />
           )}
-          // onPress={() => Linking.openURL('')}
+          onPress={() =>
+            Linking.openURL(
+              'https://api.whatsapp.com/send?phone=554121413032&text=' +
+                encodeURIComponent('Olá, possuo uma dúvida')
+            )
+          }
         />
       </View>
       <View

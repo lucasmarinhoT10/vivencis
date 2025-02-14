@@ -60,8 +60,8 @@ const DownloadFile: React.FC<DownloadFileProps> = ({
       return;
     }
     const result = await ImagePicker.launchCameraAsync({
-      allowsEditing: true,
-      quality: 1,
+      allowsEditing: false,
+      quality: 0.5,
     });
     handleResult(result);
   };
@@ -78,7 +78,7 @@ const DownloadFile: React.FC<DownloadFileProps> = ({
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: false,
-      quality: 1,
+      quality: 0.5,
     });
     handleResult(result);
   };

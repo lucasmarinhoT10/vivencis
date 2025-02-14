@@ -100,6 +100,7 @@ function HomeLoggedScreen() {
 
   useEffect(() => {
     if (location) {
+      console.log(location);
       getAddressFromCoords(location);
     }
   }, [location]);
@@ -142,8 +143,8 @@ function HomeLoggedScreen() {
 
   const handleApplyFilters = (criteria: FilterCriteria) => {
     setFilterCriteria(criteria);
-    if (address.uf && address.cidade) {
-      getRegionProjectsList(address.uf, address.cidade, criteria);
+    if (criteria?.uf || criteria?.cidade) {
+      getRegionProjectsList(criteria.uf, criteria.cidade, criteria);
     }
     setFilterModalVisible(false);
   };
@@ -228,6 +229,7 @@ function HomeLoggedScreen() {
               title={project.nome_projeto}
               startDate={project.data_execucao}
               endDate={project.data_limite_execucao}
+              place={`${project?.cidade} - ${project?.uf}`}
               description={project.descricao_projeto}
               onPress={() =>
                 handleProjectPress(project?.id_projeto, 'HomeLogged')
