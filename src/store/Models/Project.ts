@@ -7,6 +7,7 @@ export interface ProjectData {
   data_limite_execucao: string,
   descricao_projeto: string,
   icone_projeto: any
+  inscrito: 'N' | 'S'
 }
 
 export interface responseProjectsData{

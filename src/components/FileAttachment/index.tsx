@@ -33,7 +33,7 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({ control, name }) => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: false,
-      quality: 1,
+      quality: 0.5,
     });
 
     if (!result.canceled) {

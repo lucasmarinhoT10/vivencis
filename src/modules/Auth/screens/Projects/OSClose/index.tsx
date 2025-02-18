@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
+  Alert,
   Image,
   Modal,
   ScrollView,
@@ -50,7 +51,7 @@ type Imagem = {
   valida_caid_codbar: 'S' | 'N';
 };
 
-type Roles = {
+export type Roles = {
   assinatura: 'S' | 'N';
   grupos: any[];
   imagens: Imagem[];
@@ -105,10 +106,8 @@ const OSClose: React.FC = (props: any) => {
   const [products, setProducts] = useState<any[]>([]);
   const [roles, setRoles] = useState<Roles>();
   const [optionsProduct, setOptionsProduct] = useState<string[]>([]);
-  // Estado para armazenar erros dos campos que não estão no react-hook-form
   const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
 
-  // Cria as opções do select a partir do array de produtos (formato "codigo - descrição")
   useEffect(() => {
     if (products?.length > 0) {
       const dataOptions = products.flatMap(
@@ -127,7 +126,6 @@ const OSClose: React.FC = (props: any) => {
     }
   }, [products]);
 
-  // Função que monta os arrays de materiais (e defeito) no formato esperado pela API
   const handleCloseOS = async () => {
     const mappedMateriais = materiais.map((item) => {
       const [codigo] = item.material.split(' - ');
@@ -201,15 +199,20 @@ const OSClose: React.FC = (props: any) => {
       longitude_inicio: -60.069610476493835,
     };
 
-    // Envia a OS e obtém o idFechamento
     const returnData = await fetchCloseOS({
       setLoading,
       id_parceiro: user?.id_entidade,
       payload,
     });
-    setIdFechamento(returnData?.id_fechamento);
 
-    if (returnData?.id_fechamento) {
+    if (returnData?.erro) {
+      Alert.alert(returnData?.erro);
+      setLoading(false);
+      setSuccess(false);
+      setIsOpenModalConfirmation(false);
+      setIdFechamento(returnData?.id_fechamento);
+      return;
+    } else if (returnData?.id_fechamento) {
       await Promise.all(
         anexos.map((item) => {
           const evidencePayload = {
@@ -223,9 +226,10 @@ const OSClose: React.FC = (props: any) => {
           });
         })
       );
+      setSuccess(true);
+      setLoading(false);
+      return;
     }
-
-    setSuccess(true);
   };
 
   useEffect(() => {
@@ -300,10 +304,8 @@ const OSClose: React.FC = (props: any) => {
   >([]);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-  // Validação de todos os campos obrigatórios
   const handleConfirm = async () => {
     let validationErrors: { [key: string]: string } = {};
-
     if (!nome.trim()) {
       validationErrors.nome = 'Nome é obrigatório';
     }
@@ -313,15 +315,15 @@ const OSClose: React.FC = (props: any) => {
       validationErrors.cpf = 'CPF é obrigatório';
     }
     const aniversarioVal = getValues('aniversario');
-    if (!aniversarioVal.trim()) {
+    if (!aniversarioVal || !aniversarioVal.trim()) {
       validationErrors.aniversario = 'Data de nascimento é obrigatória';
     }
+    console.log(validationErrors);
 
     if (roles?.assinatura?.toUpperCase() === 'S' && !assinado.trim()) {
       validationErrors.assinado = 'Assinatura é obrigatória';
     }
 
-    // Validação dos materiais
     if (optionsProduct.length > 0) {
       materiais.forEach((item, index) => {
         if (!item.material || item.material.trim() === '') {
@@ -361,7 +363,7 @@ const OSClose: React.FC = (props: any) => {
           validationErrors[`materiaisDefeitoQuantity_${index}`] =
             'Quantidade deve ser maior que 0';
         }
-        if (item.material.trim()) {
+        if (!item.material || item.material.trim()) {
           const [codigo] = item.material.split(' - ');
           const grupoObj = products.find((grupoObj) =>
             grupoObj.produtos.some((prod: any) => prod.codigo === codigo.trim())
@@ -381,7 +383,6 @@ const OSClose: React.FC = (props: any) => {
       });
     }
 
-    // Validação dos anexos
     if (roles?.imagens) {
       roles.imagens.forEach((img) => {
         if (img.obrigatorio.toUpperCase() === 'S') {
@@ -394,7 +395,6 @@ const OSClose: React.FC = (props: any) => {
       });
     }
 
-    // Validação das assinaturas das testemunhas, se aplicável
     if (roles?.testemunhas?.toUpperCase() === 'S') {
       if (!witnessSignature1.trim()) {
         validationErrors.witnessSignature1 =
@@ -408,15 +408,24 @@ const OSClose: React.FC = (props: any) => {
 
     if (Object.keys(validationErrors).length > 0) {
       setFormErrors(validationErrors);
+      setIsOpenModalConfirmation(false);
+      const errorMessages = Object.values(validationErrors).join('\n');
+      Alert.alert('Atenção', errorMessages);
       return;
     } else {
       setFormErrors({});
+
       await handleCloseOS();
+      setLoading(true);
     }
   };
 
   return (
-    <Container title={`Fechamento OS ${data?.id_os}`} scrollEnabled hasGoBack>
+    <Container
+      title={`Fechamento OS ${data?.numero_os}`}
+      scrollEnabled
+      hasGoBack
+    >
       <View>
         <Button
           variant="secondary"
@@ -520,20 +529,23 @@ const OSClose: React.FC = (props: any) => {
             <Spacer size="medium" />
           </ExpandableCard>
 
-          <Spacer size="medium" />
-
           {/* Tem troca */}
-          <ExpandableCard title="Tem troca?">
-            <SwitchOption
-              value={temTroca}
-              onValueChange={setTemTroca}
-              children={
-                <Typograph variant="body" color={theme.colors.text.primary}>
-                  Tem troca?
-                </Typograph>
-              }
-            />
-          </ExpandableCard>
+          {optionsProduct.length > 0 && (
+            <>
+              <Spacer size="medium" />
+              <ExpandableCard title="Tem troca?">
+                <SwitchOption
+                  value={temTroca}
+                  onValueChange={setTemTroca}
+                  children={
+                    <Typograph variant="body" color={theme.colors.text.primary}>
+                      Tem troca?
+                    </Typograph>
+                  }
+                />
+              </ExpandableCard>
+            </>
+          )}
 
           {/* Materiais */}
           {optionsProduct.length > 0 && (
@@ -861,6 +873,7 @@ const OSClose: React.FC = (props: any) => {
                     {selected ? (
                       <ImageUploader
                         fileName={`${item.descricao}`}
+                        textDelete="Deletar foto"
                         onDeletePress={() =>
                           setAnexos((prev) =>
                             prev.filter((q) => q.id_tipo_img !== item.id)
@@ -1003,6 +1016,7 @@ const OSClose: React.FC = (props: any) => {
                       halfWidth
                       text="Confirmar"
                       variant="quaternary"
+                      loading={loading}
                       onPress={handleConfirm}
                     />
                   </View>
@@ -1012,7 +1026,6 @@ const OSClose: React.FC = (props: any) => {
           </Modal>
         )}
 
-        {/* Modal para assinatura do autorizador */}
         {isOpenModal && (
           <Modal
             visible={isOpenModal}

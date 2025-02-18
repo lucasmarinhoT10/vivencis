@@ -61,13 +61,13 @@ const filters = {
   ],
   filter_prazo: ['VENCIDO', 'VENCENDO HOJE', 'FUTURAS'],
   filter_grupostatus: [
-    'AGUARDANDO ATENDIMENTO',
     'CORREÇÃO',
     'EXECUTADA',
     'INSTALADA',
     'IMPRODUTIVA',
     'CANCELADA',
-    'CTI',
+    'PENDENTE',
+    'IMPRODUTIVA',
   ],
 };
 export const FilterModal: React.FC<ModalConfirmationProps> = ({

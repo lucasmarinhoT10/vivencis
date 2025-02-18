@@ -47,7 +47,7 @@ export async function fetchExtracts({
   try {
     setLoading(true);
     const { data } = await api.get<any>(
-      `/wfmb2bapp/v2/parceiros/extratos/${id_parceiro}?pagina=${page}&projeto=${id_project}`
+      `/wfmb2bapp/v2/parceiros/extratos/${id_parceiro}`
     );
     if (data) {
       setExtracts(data);

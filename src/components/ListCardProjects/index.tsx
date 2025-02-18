@@ -5,6 +5,8 @@ import {
   StyleSheet,
   TouchableOpacity,
   FlatList,
+  Modal,
+  Alert,
 } from 'react-native';
 
 import Foundation from '@expo/vector-icons/Foundation';
@@ -12,6 +14,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { theme } from '@theme/theme';
 import Icon from '@components/Icon';
 import { useNavigation } from '@react-navigation/native';
+import Spacer from '@components/Spacer';
+import Input from '@components/Input';
+import Button from '@components/Button';
 
 interface Item {
   label: string;
@@ -51,7 +56,9 @@ export const ListCardProjects: React.FC<ListCardProps> = ({
 }) => {
   const [isMenuVisible, setMenuVisible] = useState(false);
   const [showInfoToggle, setShowInfoToggle] = useState(showInfoCard);
-
+  const cpfRegistrado = data?.cpf;
+  const [CPFValidation, setCPFValidation] = useState('');
+  const [isOpenModalConfirmation, setIsOpenModalConfirmation] = useState(false);
   const toggleMenu = () => {
     setMenuVisible(!isMenuVisible);
   };
@@ -59,6 +66,7 @@ export const ListCardProjects: React.FC<ListCardProps> = ({
   const handleShowInfo = () => {
     setShowInfoToggle((prev) => !prev);
   };
+
   const navigation = useNavigation();
   return (
     <TouchableOpacity onPress={onPress} activeOpacity={0.7}>
@@ -88,7 +96,7 @@ export const ListCardProjects: React.FC<ListCardProps> = ({
             <TouchableOpacity
               style={styles.menuOption}
               onPress={() => {
-                onPress();
+                if (onPress) onPress();
                 setMenuVisible(false);
               }}
             >
@@ -97,8 +105,8 @@ export const ListCardProjects: React.FC<ListCardProps> = ({
             <TouchableOpacity
               style={styles.menuOption}
               onPress={() => {
-                navigation.navigate('OSClose' as never, data);
-                setMenuVisible(false);
+                setIsOpenModalConfirmation(true);
+                // setMenuVisible(false);
               }}
             >
               <Text style={styles.menuText}>Executar OS</Text>
@@ -180,6 +188,78 @@ export const ListCardProjects: React.FC<ListCardProps> = ({
           </View>
         </View>
       </View>
+      <Modal
+        visible={isOpenModalConfirmation}
+        onRequestClose={() => setIsOpenModalConfirmation(false)}
+        transparent
+        animationType="fade"
+      >
+        <View style={styles.modalBackground}>
+          <View
+            style={{
+              width: '90%',
+              backgroundColor: 'white',
+              borderRadius: 20,
+              alignItems: 'center',
+              paddingHorizontal: 16,
+              paddingVertical: 16,
+            }}
+          >
+            <Spacer size="large" />
+            <View>
+              <Text style={styles.modalTitle}>Confirmação</Text>
+              <Spacer size="small" />
+              <Text style={styles.modalText}>
+                Por favor, digite os 4 dígitos iniciais CPF/NIS.
+              </Text>
+              <Spacer size="medium" />
+              <Input
+                name=""
+                keyboardType="numeric"
+                value={CPFValidation}
+                onChangeText={(text) => {
+                  const onlyDigits = text.replace(/\D/g, '');
+                  const onlyFour = onlyDigits.slice(0, 4);
+                  setCPFValidation(onlyFour);
+                }}
+              />
+            </View>
+            <Spacer size="large" />
+            <View style={styles.modalButtonsRow}>
+              <Button
+                halfWidth
+                variant="secondary"
+                text="Cancelar"
+                onPress={() => setIsOpenModalConfirmation(false)}
+              />
+              <Button
+                halfWidth
+                text="Confirmar"
+                variant="quaternary"
+                onPress={() => {
+                  if (
+                    cpfRegistrado &&
+                    CPFValidation === cpfRegistrado.substring(0, 4)
+                  ) {
+                    navigation.navigate('OSClose' as never, data);
+                    // if (data?.status === 'CORRIGIR INSTALAÇÃO') {
+                    //   navigation.navigate('OSCorrection' as never, data);
+                    // } else {
+                    //   navigation.navigate('OSClose' as never, data);
+                    // }
+                    setIsOpenModalConfirmation(false);
+                  } else {
+                    Alert.alert(
+                      'Erro',
+                      'Os 4 dígitos informados não correspondem ao registro.'
+                    );
+                  }
+                }}
+              />
+            </View>
+          </View>
+        </View>
+      </Modal>
     </TouchableOpacity>
   );
 };
@@ -196,6 +276,41 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 18,
     right: 16,
+  },
+  modalBackground: {
+    height: '100%',
+    width: '100%',
+    backgroundColor: '#00000080',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    width: '90%',
+    height: '70%',
+    backgroundColor: 'white',
+    borderRadius: 20,
+    alignItems: 'center',
+    paddingHorizontal: 16,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  modalText: {
+    fontSize: 14,
+    textAlign: 'center',
+  },
+  termosContainer: {
+    width: '95%',
+    height: '70%',
+    backgroundColor: '#F4F4F5',
+    borderRadius: 10,
+  },
+  modalButtonsRow: {
+    flexDirection: 'row',
+    paddingHorizontal: 16,
+    gap: 12,
   },
   card: {
     backgroundColor: theme.colors.primary.contrastText,

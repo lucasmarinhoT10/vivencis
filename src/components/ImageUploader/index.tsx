@@ -5,8 +5,10 @@ import { theme } from '../../theme/theme';
 
 interface ImageUploaderProps {
   title?: string;
+  textDelete?: string;
   fileName: string;
-  onDeletePress: () => void;
+  status?: string;
+  onDeletePress?: () => void;
   onEditPress?: () => void; // Nova prop para editar
   onPress?: () => void;
   iconType?: 'document' | 'image';
@@ -19,13 +21,14 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   onEditPress,
   onPress,
   iconType = 'document',
+  textDelete,
+  status,
 }) => {
   const [isMenuVisible, setMenuVisible] = useState(false);
 
   const toggleMenu = () => {
     setMenuVisible(!isMenuVisible);
   };
-
   return (
     <View style={styles.card}>
       <View style={styles.content}>
@@ -49,14 +52,16 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
           </View>
         </TouchableOpacity>
       </View>
-      <TouchableOpacity onPress={toggleMenu}>
-        <Ionicons
-          name="ellipsis-horizontal"
-          size={18}
-          style={styles.menu}
-          color={theme.colors.text.primary}
-        />
-      </TouchableOpacity>
+      {!status || status === 'REPROVADO' ? (
+        <TouchableOpacity onPress={toggleMenu}>
+          <Ionicons
+            name="ellipsis-horizontal"
+            size={18}
+            style={styles.menu}
+            color={theme.colors.text.primary}
+          />
+        </TouchableOpacity>
+      ) : null}
 
       {/* Menu */}
       {isMenuVisible && (
@@ -69,18 +74,22 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
                 setMenuVisible(false);
               }}
             >
-              <Text style={styles.menuText}>Editar qualificação</Text>
+              <Text style={styles.menuText}>
+                {textDelete ? textDelete : 'Editar qualificação'}
+              </Text>
             </TouchableOpacity>
           )}
-          <TouchableOpacity
-            style={styles.menuOption}
-            onPress={() => {
-              onDeletePress();
-              setMenuVisible(false);
-            }}
-          >
-            <Text style={styles.menuText}>Excluir qualificação</Text>
-          </TouchableOpacity>
+          {!status && onDeletePress && (
+            <TouchableOpacity
+              style={styles.menuOption}
+              onPress={() => {
+                onDeletePress();
+                setMenuVisible(false);
+              }}
+            >
+              <Text style={styles.menuText}>Excluir qualificação</Text>
+            </TouchableOpacity>
+          )}
         </View>
       )}
     </View>

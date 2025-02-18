@@ -74,10 +74,18 @@ export default function ProjectsScreen() {
   const navigation = useNavigation<ProjectsScreenNavigationProp>();
   const { user } = useUserStore();
 
-  const handleProjectPress = (projectId: number) => {
-    navigation.navigate('DetailsProjects' as never, { projectId });
+  const handleProjectPress = ({
+    projectId,
+    inscrito,
+  }: {
+    projectId: number;
+    inscrito: string;
+  }) => {
+    navigation.navigate('DetailsProjects' as never, {
+      id: projectId,
+      inscrito: inscrito,
+    });
   };
-
   const handleNextPage = () => {
     if (paginationOrders && currentPage < paginationOrders.paginas) {
       setCurrentPage((prev) => prev + 1);
@@ -172,16 +180,23 @@ export default function ProjectsScreen() {
       ) : (
         <View>
           {projects?.length ? (
-            projects.map((project) => (
-              <ProjectCard
-                key={project.id_projeto}
-                title={project.nome_projeto}
-                startDate={project.data_execucao}
-                endDate={project.data_limite_execucao}
-                description={project.descricao_projeto}
-                onPress={() => handleProjectPress(project.id_projeto)}
-              />
-            ))
+            projects
+              ?.filter((it) => it?.inscrito === 'S')
+              .map((project) => (
+                <ProjectCard
+                  key={project.id_projeto}
+                  title={project.nome_projeto}
+                  startDate={project.data_execucao}
+                  endDate={project.data_limite_execucao}
+                  description={project.descricao_projeto}
+                  onPress={() =>
+                    handleProjectPress({
+                      id: project?.id_projeto,
+                      inscrito: project?.inscrito,
+                    })
+                  }
+                />
+              ))
           ) : (
             <>
               {loading ? (

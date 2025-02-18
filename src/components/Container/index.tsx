@@ -1,5 +1,5 @@
 import React from 'react';
-import { ScrollView, View, ViewStyle } from 'react-native';
+import { Platform, ScrollView, View, ViewStyle } from 'react-native';
 import { theme } from '../../theme/theme';
 import Header from '@components/Header';
 import { getColor } from '@utils/getColor';
@@ -7,6 +7,7 @@ import { useNavigation } from '@react-navigation/native';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import FloatingButton from '@components/Button/FloatingButton';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Spacer from '@components/Spacer';
 
 interface ContainerProps {
   children: React.ReactNode;

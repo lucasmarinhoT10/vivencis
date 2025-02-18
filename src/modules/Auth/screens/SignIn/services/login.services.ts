@@ -35,8 +35,13 @@ export async function login({
         await setRegister(response);
         return { success: true, data: data };
       } else if (response?.status_analise === 'EM ANALISE') {
-        await authenticateUser(data?.token, rememberMe);
-        await setUser(data?.usuario);
+        const isReproved = response?.documentos_qualificacoes?.find(
+          (it: any) => it?.status === 'REPROVADO'
+        );
+        if(!isReproved) {
+          await authenticateUser(data?.token, rememberMe);
+          await setUser(data?.usuario);
+        }
         setLoading(false);
         return {
           success: false,

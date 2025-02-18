@@ -1,9 +1,12 @@
 import { View, StyleSheet, TouchableOpacity, Alert } from 'react-native';
-import React, { useEffect, useState } from 'react';
-import { useForm, FormProvider } from 'react-hook-form';
-import { yupResolver } from '@hookform/resolvers/yup';
-import * as yup from 'yup';
-
+import React, { useEffect, useState, useMemo } from 'react';
+import { delay } from '@utils/delay';
+import { uriToBase64 } from 'src/config/utils';
+import {
+  getDocumentosTipo,
+  registerUser,
+} from '../../services/register.services';
+import useAuthStore from 'src/store/authStore';
 import Input from '@components/Input';
 import Line from '@components/Line';
 import Spacer from '@components/Spacer';
@@ -11,22 +14,9 @@ import Typograph from '@components/Typograph';
 import DownloadFile from '@components/DownloadFile';
 import ImageUploader from '@components/ImageUploader';
 import Button from '@components/Button';
-import { theme } from '@theme/theme';
-import { delay } from '@utils/delay';
-import { removingSpecialChars, uriToBase64 } from 'src/config/utils';
-import {
-  getDocumentosTipo,
-  registerUser,
-} from '../../services/register.services';
-import useAuthStore from 'src/store/authStore';
-import { Masks } from 'react-native-mask-input';
 import SelectDrop from '@components/SelectDrop';
 import { formatAndValidateDateInput } from '@utils/normalilze';
-
-const schemaStepFour = yup.object().shape({
-  cnpj: yup.string().required('O cartão CNPJ é obrigatório'),
-  responsibleId: yup.string().required('A identidade ou CNH é obrigatória'),
-});
+import { theme } from '@theme/theme';
 
 const StepFour = ({
   setDataRegister,
@@ -35,147 +25,321 @@ const StepFour = ({
   setStep,
   setModalVisible,
   isEdit,
+  startData, // Dados iniciais (antes de alterações)
 }: any) => {
   const { tokenTemp } = useAuthStore();
-  const {
-    formState: { errors },
-    handleSubmit,
-    getValues,
-    setValue,
-  } = useForm({
-    resolver: yupResolver(schemaStepFour),
-    mode: 'onBlur',
-  });
 
+  // Estado dos documentos atuais (qualificações)
   const [qualifications, setQualifications] = useState<
     Array<{
-      id: string;
-      fileName: string;
-      tipo_documento: string;
-      uri: string;
-      validade: string;
+      id?: string;
+      id_objeto?: number;
+      fileName?: string;
+      nome_qualificacao?: string;
+      tipo_documento: number;
+      uri?: string | null;
+      validade?: string;
+      dta_validade?: string;
+      status?: string;
+      // Será marcada como true se o documento recebeu nova URI (foi alterado)
+      isUpdated?: boolean;
     }>
-  >([]);
-  const [nextId, setNextId] = useState(1);
-  const [loading, setLoading] = useState(false);
-  const [visible, setVisible] = useState(false);
-  const [docsTipo, setDocsTipo] = useState([]);
-  const handleAddQualification = (
-    description: string,
-    uri: string,
-    validade: string
-  ) => {
-    setQualifications((prev) => [
-      ...prev,
-      {
-        tipo_documento: description,
-        id: new Date().getTime().toString(),
-        fileName: `qualificacao-${new Date().getTime().toString()}.pdf`,
-        uri: uri,
-        validade: validade,
-      },
-    ]);
+  >(dataRegister?.isEdit ? dataRegister?.documentos_qualificacoes : []);
 
-    setDescription('');
-    setValidade('');
-    setImageUriQualifications(null);
+  const [loading, setLoading] = useState(false);
+  const [docsTipo, setDocsTipo] = useState<any[]>([]);
+  const [visible, setVisible] = useState(false);
+
+  // Estados do formulário de adição/edição
+  const [selectedQualification, setSelectedQualification] = useState<
+    number | null
+  >(null);
+  // Usamos este estado para guardar o item que está sendo editado
+  const [selectedQualificationEdit, setSelectedQualificationEdit] =
+    useState<any>(null);
+  const [qualificationValidade, setQualificationValidade] =
+    useState<string>('');
+  const [qualificationFileUri, setQualificationFileUri] = useState<
+    string | null
+  >(null);
+
+  // Estados para exibição de erros
+  const [qualificationTypeError, setQualificationTypeError] = useState<
+    string | null
+  >(null);
+  const [qualificationValidadeError, setQualificationValidadeError] = useState<
+    string | null
+  >(null);
+  const [qualificationFileError, setQualificationFileError] = useState<
+    string | null
+  >(null);
+
+  // Recupera as opções de tipos de documentos
+  const getDocsTipoData = async () => {
+    await getDocumentosTipo({ setLoading: () => {}, setDocsTipo, tokenTemp });
   };
 
-  const onSubmit = async (data: any) => {
+  useEffect(() => {
+    getDocsTipoData();
+  }, []);
+
+  // Tipos já selecionados localmente
+  const localQualificationTypes = useMemo(
+    () => qualifications.map((q) => q.tipo_documento),
+    [qualifications]
+  );
+
+  // Tipos que já existem no dataRegister (exceto os com status REPROVADO)
+  const existingQualificationTypes = useMemo(() => {
+    return (
+      dataRegister?.documentos_qualificacoes
+        ?.filter((doc: any) => doc.status !== 'REPROVADO')
+        .map((doc: any) => doc.tipo_documento) || []
+    );
+  }, [dataRegister]);
+
+  const excludedQualificationTypes = useMemo(
+    () => [...localQualificationTypes, ...existingQualificationTypes],
+    [localQualificationTypes, existingQualificationTypes]
+  );
+
+  const filteredDocsTipo = useMemo(() => {
+    return docsTipo.filter(
+      (doc: any) => !excludedQualificationTypes.includes(doc.cod_tipo)
+    );
+  }, [docsTipo, excludedQualificationTypes]);
+
+  // Permite edição se o item for novo (sem status) ou se estiver com status REPROVADO
+  const canEditQualification = (qualification: any) => {
+    return !qualification.status || qualification.status === 'REPROVADO';
+  };
+
+  // Ao clicar em "Editar", carregamos os dados do item para o formulário e
+  // guardamos o item atual em selectedQualificationEdit.
+  const handleEditQualification = (qualification: any) => {
+    setSelectedQualificationEdit(qualification);
+    setSelectedQualification(qualification.tipo_documento);
+    setQualificationValidade(
+      qualification.validade || qualification.dta_validade || ''
+    );
+    setQualificationFileUri(qualification.uri || null);
+    setQualificationTypeError(null);
+    setQualificationValidadeError(null);
+    setQualificationFileError(null);
+    // Opcional: você pode também rolar a tela para o formulário, se necessário.
+  };
+
+  // Ao clicar em "Adicionar qualificação", se estivermos editando (selectedQualificationEdit não for nulo),
+  // atualizamos o item existente; caso contrário, adicionamos um novo.
+  const handleAddQualification = () => {
+    if (!selectedQualification) {
+      setQualificationTypeError('Selecione uma qualificação');
+      return;
+    }
+    if (!qualificationValidade) {
+      setQualificationValidadeError('Digite a data de validade');
+      return;
+    }
+    if (!qualificationFileUri) {
+      setQualificationFileError('Selecione um arquivo');
+      return;
+    }
+    if (selectedQualificationEdit) {
+      // Atualiza o item existente preservando os demais dados (como dta_validade e id_objeto)
+      const updatedItem = {
+        ...selectedQualificationEdit,
+        tipo_documento: selectedQualification,
+        fileName: `qualificacao-${new Date().getTime().toString()}.pdf`,
+        uri: qualificationFileUri,
+        validade: qualificationValidade,
+        // Marcar como atualizado para envio
+        isUpdated: true,
+      };
+      setQualifications((prev) =>
+        prev.map((q) => {
+          const currentId = q.id || q.id_objeto;
+          const editId =
+            selectedQualificationEdit.id || selectedQualificationEdit.id_objeto;
+          return currentId === editId ? updatedItem : q;
+        })
+      );
+      setSelectedQualificationEdit(null);
+    } else {
+      // Adiciona novo item
+      const newQualification: any = {
+        id: new Date().getTime().toString(),
+        tipo_documento: selectedQualification,
+        fileName: `qualificacao-${new Date().getTime().toString()}.pdf`,
+        uri: qualificationFileUri,
+        validade: qualificationValidade,
+      };
+      if (isEdit) {
+        newQualification.isUpdated = true;
+      }
+      setQualifications((prev) => [...prev, newQualification]);
+    }
+    // Reseta o formulário
+    setSelectedQualification(null);
+    setQualificationValidade('');
+    setQualificationFileUri(null);
+    setQualificationTypeError(null);
+    setQualificationValidadeError(null);
+    setQualificationFileError(null);
+  };
+
+  // Função auxiliar: compara dois objetos e retorna apenas as propriedades alteradas (exceto campos sensíveis)
+  const getChangedData = (original: any, updated: any) => {
+    const delta: any = {};
+    const ignoreKeys = [
+      'cnpj',
+      'responsavel_cpf',
+      'email',
+      'email_confirmation',
+      'telefone_contato',
+      'endereco',
+      'dados_bancarios',
+      'ie',
+      'im',
+      'cnae01',
+      'cnae02',
+    ];
+    for (const key in updated) {
+      if (ignoreKeys.includes(key)) continue;
+      if (
+        typeof updated[key] === 'object' &&
+        updated[key] !== null &&
+        !Array.isArray(updated[key])
+      ) {
+        const nestedDelta = getChangedData(original[key] || {}, updated[key]);
+        if (Object.keys(nestedDelta).length > 0) {
+          delta[key] = nestedDelta;
+        }
+      } else if (
+        JSON.stringify(updated[key]) !== JSON.stringify(original[key])
+      ) {
+        delta[key] = updated[key];
+      }
+    }
+    return delta;
+  };
+
+  // Retorna somente os documentos que foram alterados ou que são novos.
+  // Um documento é considerado alterado se não existir em startData ou se estiver marcado com isUpdated === true.
+  const getDeltaDocuments = (originalDocs: any[], currentDocs: any[]) => {
+    return currentDocs.filter((doc) => {
+      const originalDoc = originalDocs.find(
+        (o) => (o.id || o.id_objeto) === (doc.id || doc.id_objeto)
+      );
+      if (!originalDoc) return true;
+      return doc.isUpdated === true;
+    });
+  };
+
+  // Ao submeter, converte as URIs para base64 e monta o payload delta apenas com os dados alterados.
+  // Para cada documento alterado, preserva os dados originais (exceto o campo "status").
+  const onSubmit = async () => {
+    if (qualifications.length === 0) {
+      Alert.alert('Adicione pelo menos uma qualificação');
+      return;
+    }
+    if (
+      selectedQualification !== null ||
+      qualificationValidade.trim() !== '' ||
+      qualificationFileUri !== null
+    ) {
+      Alert.alert(
+        'Finalize a edição',
+        'Finalize ou cancele a edição antes de prosseguir.'
+      );
+      return;
+    }
+    const qualificationIncompleta = qualifications.find((q) => {
+      const temImagemCadastrada = q.uri || q.nome_qualificacao;
+      return !temImagemCadastrada || q.status === 'REPROVADO';
+    });
+    if (qualificationIncompleta) {
+      Alert.alert(
+        'Atualize as qualificações',
+        'Atualize todas as qualificações incompletas ou com status REPROVADO antes de finalizar.'
+      );
+      return;
+    }
     await delay(500);
 
-    const convertedDocumentsCNPJ = await Promise.all(
-      Object.entries(data).map(async ([tipo_documento, uri]) => ({
-        base64: await uriToBase64(uri),
-        validade: '10/12/2025',
-        tipo_documento: tipo_documento === 'responsibleId' ? 3 : 1,
-      }))
-    );
+    let docsPayload;
+    if (isEdit && startData.documentos_qualificacoes) {
+      const deltaDocs = getDeltaDocuments(
+        startData.documentos_qualificacoes,
+        qualifications
+      );
+      docsPayload = await Promise.all(
+        deltaDocs.map(async (doc) => {
+          const dta_validade = doc.validade || doc.dta_validade;
+          // Busca a descrição (nome da qualificação) no docsTipo para incluir no payload
+          const nome_qualificacao = docsTipo.find(
+            (item: any) => item.cod_tipo === doc.tipo_documento
+          )?.descricao;
+          return {
+            base64: await uriToBase64(doc.uri!),
+            dta_validade,
+            nome_qualificacao,
+            tipo_documento: doc.tipo_documento,
+            ...(doc.id_objeto ? { id_objeto: doc.id_objeto } : {}),
+            // O campo "status" NÃO é enviado!
+          };
+        })
+      );
+      if (docsPayload.length === 0) docsPayload = undefined;
+    } else {
+      docsPayload = await Promise.all(
+        qualifications.map(async (doc) => {
+          const validade = doc.validade || doc.dta_validade;
+          return {
+            base64: await uriToBase64(doc.uri!),
+            validade,
+            tipo_documento: doc.tipo_documento,
+          };
+        })
+      );
+    }
 
-    const convertedDocuments = await Promise.all(
-      qualifications.map(async (it) => ({
-        base64: await uriToBase64(it.uri),
-        validade: it?.validade,
-        tipo_documento: it.tipo_documento,
-      }))
-    );
-    setDataRegister((prevData: any) => ({
-      ...prevData,
-      documentosQualificacoes: [
-        ...convertedDocumentsCNPJ,
-        ...convertedDocuments,
-      ],
-    }));
+    const updatedData = {
+      ...dataRegister,
+      ...(docsPayload !== undefined && {
+        documentos_qualificacoes: docsPayload,
+      }),
+    };
+
+    let payload = updatedData;
+    if (isEdit && startData) {
+      const delta = getChangedData(startData, updatedData);
+      if (docsPayload !== undefined) {
+        delta.documentos_qualificacoes = docsPayload;
+      } else {
+        delete delta.documentos_qualificacoes;
+      }
+      if (Object.keys(delta).length === 0) {
+        Alert.alert('Nenhum dado foi alterado');
+        return;
+      }
+      payload = delta;
+    }
+
+    setDataRegister(updatedData);
+
     const response = await registerUser({
       setLoading,
-      payload: {
-        cnpj: removingSpecialChars(dataRegister?.cnpj),
-        ie: dataRegister?.ie,
-        im: dataRegister?.im,
-        cnae01: dataRegister?.cnae01,
-        cnae02: dataRegister?.cnae02,
-        razao_social: dataRegister?.razao_social,
-        nome_fantasia: dataRegister?.nome_fantasia,
-        endereco: {
-          cep: dataRegister?.endereco.cep,
-          logradouro: dataRegister?.endereco?.logradouro,
-          numero: dataRegister?.endereco?.numero,
-          id_cidade: dataRegister?.endereco?.id_cidade,
-          bairro: dataRegister?.endereco?.bairro,
-          complemento: dataRegister?.endereco?.complemento,
-        },
-        responsavel_nome: dataRegister.responsavel_nome,
-        responsavel_cpf: removingSpecialChars(dataRegister.responsavel_cpf),
-        telefone_contato: dataRegister.telefone_contato,
-        email: dataRegister?.email,
-        dados_bancarios: dataRegister?.dados_bancarios,
-        documentos_qualificacoes: [
-          ...convertedDocumentsCNPJ,
-          ...convertedDocuments,
-        ],
-      },
+      payload,
       tokenTemp,
       isEdit,
     });
-
     if (response.erro) {
-      Alert.alert(response.erro);
+      Alert.alert('Erro', response.erro);
     } else {
       setModalVisible(true);
     }
   };
 
-  const [imageUri, setImageUri] = useState<string | null>(
-    getValues('responsibleId')
-  );
-  const [description, setDescription] = useState<string | null>('');
-  const [validade, setValidade] = useState<string | null>('');
-  const [descriptionError, setDescriptionError] = useState<string | null>('');
-  const [validadeError, setValidadeError] = useState<string | null>('');
-  const [imageUriId, setImageUriId] = useState<string | null>(
-    getValues('responsibleId')
-  );
-  const [imageUriQualifications, setImageUriQualifications] = useState<
-    string | null
-  >();
-  const [imageUriQualificationsError, setImageUriQualificationsError] =
-    useState<string | null>();
-
-  const handleImageSelect = (uri: string, type: any) => {
-    if (type === 'responsibleId') {
-      setImageUriId(uri);
-    } else {
-      setImageUri(uri);
-    }
-    setValue(type, uri);
-  };
-
-  const getDocsTipoData = async () => {
-    await getDocumentosTipo({ setLoading: () => {}, setDocsTipo, tokenTemp });
-  };
-  useEffect(() => {
-    getDocsTipoData();
-  }, []);
   return (
     <View style={styles.content}>
       <Typograph
@@ -190,65 +354,43 @@ const StepFour = ({
       <Line progress={0.98} height={8} />
       <Spacer size="medium" />
       <View>
-        <Typograph
-          variant="title"
-          textAlign="left"
-          fontWeight="400"
-          style={styles.title}
-        >
-          Cartão CNPJ
-        </Typograph>
-        <DownloadFile
-          iconType="photo"
-          label="Adicionar fotos"
-          setSelectedImage={(uri) => handleImageSelect(uri, 'cnpj')}
-          selectedImage={imageUri}
-        />
-        {errors.cnpj && (
-          <Typograph textAlign="left" fontWeight="400" style={styles.errorText}>
-            {errors.cnpj.message}
-          </Typograph>
-        )}
-        <Spacer size="medium" />
-        <Typograph
-          variant="title"
-          textAlign="left"
-          fontWeight="400"
-          style={styles.title}
-        >
-          Identidade ou CNH da pessoa responsável
-        </Typograph>
-        <DownloadFile
-          iconType="photo"
-          label="Anexar fotos"
-          setSelectedImage={(uri) => handleImageSelect(uri, 'responsibleId')}
-          selectedImage={imageUriId}
-        />
-        {errors.responsibleId && (
-          <Typograph textAlign="left" fontWeight="400" style={styles.errorText}>
-            {errors.responsibleId.message}
-          </Typograph>
-        )}
-        <Spacer size="medium" />
-        <Typograph
-          variant="title"
-          textAlign="left"
-          fontWeight="500"
-          style={styles.title}
-        >
-          Qualificações
-        </Typograph>
-        <Spacer size="small" />
-
         {qualifications.map((qualification) => {
+          const isEditable = canEditQualification(qualification);
+          const description =
+            docsTipo.find(
+              (doc: any) => doc.cod_tipo === qualification.tipo_documento
+            )?.descricao || 'Qualificação';
+          const displayName =
+            qualification.fileName ||
+            qualification.nome_qualificacao ||
+            description;
           return (
-            <View key={qualification.id} style={styles.fileCard}>
+            <View
+              key={qualification.id || qualification.id_objeto}
+              style={[
+                styles.fileCard,
+                // Se o item tem status "REPROVADO" e não foi atualizado, adiciona borda vermelha
+                qualification.status === 'REPROVADO' && !qualification.isUpdated
+                  ? styles.reprovado
+                  : null,
+              ]}
+            >
               <ImageUploader
-                title={`Qualificação ${qualification?.tipo_documento}`}
-                fileName={qualification.fileName}
+                status={qualification?.status}
+                title={`Qualificação ${description}`}
+                fileName={displayName}
+                onEditPress={
+                  isEditable
+                    ? () => handleEditQualification(qualification)
+                    : undefined
+                }
                 onDeletePress={() =>
                   setQualifications((prev) =>
-                    prev.filter((q) => q.id !== qualification.id)
+                    prev.filter(
+                      (q) =>
+                        (q.id || q.id_objeto) !==
+                        (qualification.id || qualification.id_objeto)
+                    )
                   )
                 }
               />
@@ -258,103 +400,68 @@ const StepFour = ({
         <Spacer size="small" />
         <SelectDrop
           title={'Qualificação'}
-          options={docsTipo?.map((it: any) => it?.descricao) ?? []}
+          options={filteredDocsTipo.map((it: any) => it.descricao) ?? []}
           setVisible={setVisible}
           visible={visible}
-          setSelected={(item) =>
-            setDescription(
-              docsTipo?.find((it: any) => it?.descricao === item)?.cod_tipo
-            )
-          }
+          setSelected={(item) => {
+            const selected = docsTipo.find((it: any) => it.descricao === item);
+            setSelectedQualification(selected?.cod_tipo || null);
+          }}
           selected={
             (docsTipo &&
-              description &&
-              docsTipo?.find((it: any) => it?.cod_tipo === description)
-                ?.descricao) ??
-            description
+              selectedQualification &&
+              docsTipo.find((it: any) => it.cod_tipo === selectedQualification)
+                ?.descricao) ||
+            ''
           }
         />
-        {/* <Input
-          placeholder="Descreva a qualificação"
-          name="qualificationDescription"
-          maxLength={50}
-          value={description ?? ''}
-          onChangeText={(it) => {
-            setDescription(it);
-            setDescriptionError(null);
-          }}
-        /> */}
-        {descriptionError && (
-          <Typograph
-            variant="body"
-            textAlign="left"
-            fontWeight="400"
-            style={styles.errorText}
-          >
-            {descriptionError}
+        {qualificationTypeError && (
+          <Typograph textAlign="left" fontWeight="400" style={styles.errorText}>
+            {qualificationTypeError}
           </Typograph>
         )}
         <Spacer size="medium" />
-
         <Input
-          placeholder="Digite a validade"
           name=""
-          value={validade ?? ''}
+          placeholder="Digite a validade"
+          value={qualificationValidade}
           onChangeText={(it) => {
             const { value: formatted, error } = formatAndValidateDateInput(
               it,
-              validade ?? '',
+              qualificationValidade,
               false
             );
             if (!error) {
-              setValidade(formatted);
-              setValidadeError(null);
+              setQualificationValidade(formatted);
+              setQualificationValidadeError(null);
             } else {
-              setValidadeError(error);
+              setQualificationValidadeError(error);
             }
           }}
           keyboardType="numeric"
         />
-        {validadeError && (
-          <Typograph
-            variant="body"
-            textAlign="left"
-            fontWeight="400"
-            style={styles.errorText}
-          >
-            {validadeError}
+        {qualificationValidadeError && (
+          <Typograph textAlign="left" fontWeight="400" style={styles.errorText}>
+            {qualificationValidadeError}
           </Typograph>
         )}
         <Spacer size="medium" />
         <DownloadFile
           iconType="file"
           label="Anexar arquivo"
-          selectedImage={imageUriQualifications}
+          selectedImage={qualificationFileUri}
           setSelectedImage={(uri: any) => {
-            setImageUriQualificationsError(null);
-            setImageUriQualifications(uri);
+            setQualificationFileError(null);
+            setQualificationFileUri(uri);
           }}
         />
-        {imageUriQualificationsError?.length && (
+        {qualificationFileError && (
           <Typograph textAlign="left" fontWeight="400" style={styles.errorText}>
-            {imageUriQualificationsError}
+            {qualificationFileError}
           </Typograph>
         )}
         <Spacer size="large" />
-        <TouchableOpacity
-          onPress={() => {
-            if (imageUriQualifications) {
-              handleAddQualification(
-                description ?? '',
-                imageUriQualifications,
-                validade ?? ''
-              );
-            } else {
-              setImageUriQualificationsError('Selecione uma imagem');
-              setDescriptionError('Escreva uma qualificação');
-            }
-          }}
-        >
+        <TouchableOpacity onPress={handleAddQualification}>
           <Typograph
             variant="title"
             textAlign="center"
@@ -373,7 +480,7 @@ const StepFour = ({
         text={step === 4 ? 'Finalizar cadastro' : 'Próximo'}
         style={{ height: theme.sizes.extralarge }}
         variant="quaternary"
-        onPress={handleSubmit(onSubmit)}
+        onPress={onSubmit}
         loading={loading}
       />
     </View>
@@ -399,5 +506,11 @@ const styles = StyleSheet.create({
     color: theme.colors.error.light,
     fontSize: theme.spacing.small,
     marginTop: 4,
+  },
+  // Estilo para itens reprovados que ainda não foram editados
+  reprovado: {
+    borderWidth: 2,
+    borderColor: theme.colors.error.light,
+    borderRadius: 8,
   },
 });

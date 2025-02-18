@@ -5,7 +5,7 @@ export const schemaChangePassword = yup.object().shape({
   currentPassword: yup.string(),
   newPassword: yup
     .string()
-    .min(8, 'Mínimo 8 caracteres')
+    .min(3, 'Mínimo 3 caracteres')
     .required('Campo obrigatório'),
   confirmNewPassword: yup
     .string()

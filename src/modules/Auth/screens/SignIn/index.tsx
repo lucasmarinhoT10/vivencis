@@ -54,8 +54,6 @@ export default function SignInScreen() {
     resolver: yupResolver(schemaLogin),
     mode: 'onBlur',
   });
-
-  // Carrega email e senha salvos do AsyncStorage, se houver
   useEffect(() => {
     const loadRememberedCredentials = async () => {
       try {
@@ -116,11 +114,27 @@ export default function SignInScreen() {
       }
       navigation.navigate('HomeLogged' as never);
     } else if (response?.status === 'EM ANALISE') {
-      Alert.alert(
-        response?.message,
-        'Você terá acesso limitado a algumas funções até a liberação da sua conta'
-      );
-      navigation.navigate('HomeLogged' as never);
+      if (response?.data) {
+        const isReproved = response?.data?.documentos_qualificacoes?.find(
+          (it: any) => it?.status === 'REPROVADO'
+        );
+        Alert.alert(
+          'Cadastro reprovado',
+          'Algum documento do seu registro foi reprovado, reenvie um que seja válido.'
+        );
+        if (isReproved) {
+          navigation.navigate('SignUp' as never, response);
+          return;
+        } else {
+          navigation.navigate('HomeLogged' as never);
+        }
+      } else {
+        Alert.alert(
+          response?.message,
+          'Você terá acesso limitado a algumas funções até a liberação da sua conta'
+        );
+        navigation.navigate('HomeLogged' as never);
+      }
     } else if (response?.status === 'REPROVADO') {
       Alert.alert(response?.message);
       navigation.navigate('SignUp' as never, response);

@@ -23,12 +23,14 @@ import {
 import useUserStore from './store/userStore';
 import { getTokenTemp } from '@modules/Auth/screens/Register/services/register.services';
 import useAuthStore from './store/authStore';
+import useLocationStore from './store/useLocationStore';
 
 SplashScreen.preventAutoHideAsync();
 
 export default function App() {
   const [appIsReady, setAppIsReady] = useState(false);
   const { loadUser } = useUserStore();
+  const { setLocation } = useLocationStore();
   const { token, authenticateTokenTemp, loadTokenTemp, loadToken } =
     useAuthStore();
   const [fontsLoaded] = useFonts({
@@ -63,14 +65,23 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    (async () => {
+    async function fetchLocation() {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
         alert(
           'Permissão para acessar a localização é necessária para o funcionamento do app.'
         );
+        return;
       }
-    })();
+
+      const locationData = await Location.getCurrentPositionAsync({});
+      setLocation({
+        latitude: locationData.coords.latitude,
+        longitude: locationData.coords.longitude,
+      });
+    }
+
+    fetchLocation();
   }, []);
 
   if (!appIsReady || !fontsLoaded) {

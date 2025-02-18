@@ -56,6 +56,7 @@ const SignUpScreen: React.FC = (props: any) => {
             dataRegister={dataRegister}
             setModalVisible={setModalVisible}
             isEdit={dataRegister?.isEdit}
+            startData={{ ...props?.route?.params?.data, isEdit: true }}
           />
         );
       default:

@@ -124,11 +124,11 @@ const StepOne = ({ setDataRegister, dataRegister, step, setStep }: any) => {
     }
     setDataRegister((prevData: any) => ({
       ...(prevData || {}),
-      razao_social: data.razao_social,
-      nome_fantasia: data.fantasia,
-      cnae01: data.cnae01,
-      cnae02: data.cnae02,
-      telefone_contato: data.telefone,
+      razao_social: data?.razao_social,
+      nome_fantasia: data?.fantasia,
+      cnae01: data?.cnae01,
+      cnae02: data?.cnae02,
+      telefone_contato: data?.telefone,
       endereco: prevData?.endereco || {},
     }));
   };
@@ -174,6 +174,7 @@ const StepOne = ({ setDataRegister, dataRegister, step, setStep }: any) => {
         error={errors.cnpj?.message}
         name="cnpj"
         mask={Masks.BRL_CNPJ}
+        editable={!dataRegister?.isEdit}
       />
 
       <Spacer size="medium" />
@@ -190,6 +191,7 @@ const StepOne = ({ setDataRegister, dataRegister, step, setStep }: any) => {
         control={control}
         error={errors.razao_social?.message}
         name="razao_social"
+        editable={!dataRegister?.isEdit}
       />
 
       <Spacer size="medium" />
@@ -269,7 +271,12 @@ const StepOne = ({ setDataRegister, dataRegister, step, setStep }: any) => {
       >
         Inscrição Estadual
       </Typograph>
-      <Input control={control} name="ie" error={errors.ie?.message} />
+      <Input
+        control={control}
+        name="ie"
+        error={errors.ie?.message}
+        editable={!dataRegister?.isEdit}
+      />
 
       <Spacer size="medium" />
       <Typograph
@@ -280,7 +287,12 @@ const StepOne = ({ setDataRegister, dataRegister, step, setStep }: any) => {
       >
         Inscrição Municipal
       </Typograph>
-      <Input control={control} name="im" error={errors.im?.message} />
+      <Input
+        control={control}
+        name="im"
+        error={errors.im?.message}
+        editable={!dataRegister?.isEdit}
+      />
 
       <Spacer size="medium" />
       <Typograph
@@ -298,6 +310,7 @@ const StepOne = ({ setDataRegister, dataRegister, step, setStep }: any) => {
         mask={Masks.BRL_CPF}
         keyboard="numeric"
         error={errors.responsavel_cpf?.message}
+        editable={!dataRegister?.isEdit}
       />
 
       <Spacer size="medium" />
@@ -327,7 +340,12 @@ const StepOne = ({ setDataRegister, dataRegister, step, setStep }: any) => {
       >
         Email
       </Typograph>
-      <Input control={control} error={errors.email?.message} name="email" />
+      <Input
+        control={control}
+        error={errors.email?.message}
+        name="email"
+        editable={!dataRegister?.isEdit}
+      />
 
       <Spacer size="medium" />
       <Typograph
@@ -342,6 +360,7 @@ const StepOne = ({ setDataRegister, dataRegister, step, setStep }: any) => {
         control={control}
         error={errors.email_confirmation?.message}
         name="email_confirmation"
+        editable={!dataRegister?.isEdit}
       />
 
       <Spacer size="medium" />

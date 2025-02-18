@@ -34,7 +34,7 @@ export async function registerUser({ setLoading, payload, tokenTemp, isEdit}: an
       return {...error.response.data, success: false};
     } else {
       console.error("Erro inesperado:", error);
-      return {success: false}; 
+      return {erro: 'Erro inesperado', success: false}; 
     }
   }
 }

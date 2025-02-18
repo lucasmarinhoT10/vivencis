@@ -7,7 +7,7 @@ export type RootDrawerParamList = {
   SignUp: undefined;
   HomeLogged: undefined;
   Projects: undefined;
-  DetailsProjects: { projectId?: number };
+  DetailsProjects: { id?: number, inscrito?: string };
   AddProof: undefined;
   AssignTechnician: { osNumber: string };
   ManageTechnicians: undefined;

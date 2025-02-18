@@ -1,4 +1,5 @@
 import { Dimensions, Platform, PixelRatio } from 'react-native';
+import * as Location from 'expo-location';
 
 export const normalize = (pixelsToConvert: number) => {
   const scale = Dimensions.get('window').width / 360;
@@ -132,3 +133,54 @@ export const UF_OPTIONS = [
   'SE',
   'TO',
 ];
+
+export const getAddressFromCoords = async (coords: {
+  latitude: number;
+  longitude: number;
+}) => {
+  try {
+    const addresses = await Location.reverseGeocodeAsync(coords);
+    if (addresses && addresses.length > 0) {
+      console.log(addresses, 'addresses addresses');
+      const { region, subregion } = addresses[0];
+
+      // Mapeamento de estados brasileiros para suas siglas
+      const ufMap: { [key: string]: string } = {
+        Acre: 'AC',
+        Alagoas: 'AL',
+        Amapá: 'AP',
+        Amazonas: 'AM',
+        Bahia: 'BA',
+        Ceará: 'CE',
+        'Distrito Federal': 'DF',
+        'Espírito Santo': 'ES',
+        Goiás: 'GO',
+        Maranhão: 'MA',
+        'Mato Grosso': 'MT',
+        'Mato Grosso do Sul': 'MS',
+        'Minas Gerais': 'MG',
+        Pará: 'PA',
+        Paraíba: 'PB',
+        Paraná: 'PR',
+        Pernambuco: 'PE',
+        Piauí: 'PI',
+        'Rio de Janeiro': 'RJ',
+        'Rio Grande do Norte': 'RN',
+        'Rio Grande do Sul': 'RS',
+        Rondônia: 'RO',
+        Roraima: 'RR',
+        'Santa Catarina': 'SC',
+        'São Paulo': 'SP',
+        Sergipe: 'SE',
+        Tocantins: 'TO',
+      };
+
+      const uf = ufMap[region ?? ''] || '';
+
+      return { uf, cidade: subregion || '' };
+    }
+  } catch (error) {
+    console.error('Erro no reverse geocoding', error);
+    return { uf: '', cidade: '' };
+  }
+};

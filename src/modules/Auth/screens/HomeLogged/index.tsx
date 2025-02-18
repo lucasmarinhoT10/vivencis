@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { StyleSheet, View, ActivityIndicator } from 'react-native';
+import { StyleSheet, View, ActivityIndicator, Platform } from 'react-native';
 import Container from '@components/Container';
 import Spacer from '@components/Spacer';
 import { theme } from '@theme/theme';
@@ -11,7 +11,6 @@ import ProjectCard from '@components/ProjectCard';
 import useUserStore from 'src/store/userStore';
 import { fetchProjects } from '../Projects/services/project.services';
 import useLocationStore from 'src/store/useLocationStore';
-import * as Location from 'expo-location';
 import { ProjectData } from 'src/store/Models/Project';
 import ProjectFilterModal, {
   FilterCriteria,
@@ -21,6 +20,7 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { RootDrawerParamList } from '@routes/routes';
 import { getRegistro } from '../SignIn/services/login.services';
 import useRegisterStore from 'src/store/useRegisterStore';
+import { getAddressFromCoords } from '@utils/normalilze';
 
 type HomeLoggedScreenNavigationProp =
   BottomTabNavigationProp<RootDrawerParamList>;
@@ -56,21 +56,6 @@ function HomeLoggedScreen() {
 
   const { location } = useLocationStore();
 
-  const getAddressFromCoords = async (coords: {
-    latitude: number;
-    longitude: number;
-  }) => {
-    try {
-      const addresses = await Location.reverseGeocodeAsync(coords);
-      if (addresses.length > 0) {
-        const { region, city } = addresses[0];
-        setAddress({ uf: region || '', cidade: city || '' });
-      }
-    } catch (error) {
-      console.error('Erro no reverse geocoding', error);
-    }
-  };
-
   // const getRecommendedProjects = async () => {
   //   if (!user?.id_entidade) return;
   //   setLoadingRecommended(true);
@@ -94,6 +79,7 @@ function HomeLoggedScreen() {
       cidade: cidade,
       setProjects: setRegionProjectsList,
       setLoading: setLoadingRegion,
+      id_parceiro: user?.id_entidade,
       filters,
     });
   };
@@ -101,7 +87,13 @@ function HomeLoggedScreen() {
   useEffect(() => {
     if (location) {
       console.log(location);
-      getAddressFromCoords(location);
+      getAddressFromCoords(location).then((data) => {
+        if (data)
+          setAddress({
+            uf: data.uf,
+            cidade: data.cidade,
+          });
+      });
     }
   }, [location]);
 
@@ -132,9 +124,17 @@ function HomeLoggedScreen() {
       setRegister(data);
     }
   };
-  const handleProjectPress = (projectId: number, screenName: string) => {
-    console.log('Projeto pressionado', projectId);
-    navigation.navigate('DetailsProjects', { screenName, projectId } as never);
+  const handleProjectPress = ({
+    projectId,
+    inscrito,
+  }: {
+    projectId: number;
+    inscrito: string;
+  }) => {
+    navigation.navigate('DetailsProjects' as never, {
+      id: projectId,
+      inscrito: inscrito,
+    });
   };
 
   const handlePressFilters = () => {
@@ -179,8 +179,11 @@ function HomeLoggedScreen() {
         <ProjectCarousel
           title="Projetos na sua região"
           projects={regionProjectsList ? regionProjectsList.slice(0, 5) : []}
-          onPress={(id_projeto: any) =>
-            handleProjectPress(id_projeto, 'HomeLogged')
+          onPress={(project) =>
+            handleProjectPress({
+              projectId: project?.id_projeto,
+              inscrito: project?.inscrito,
+            })
           }
           onSeeMore={handleSeeMore}
         />
@@ -208,18 +211,7 @@ function HomeLoggedScreen() {
             color={theme.colors.secondary.contrastText}
           />
         </View>
-        <Input
-          showSearchIcon
-          name="Buscar em projetos disponíveis"
-          placeholder="Buscar em projetos disponíveis"
-          onChangeText={(e) => {
-            setFilterCriteria({
-              ...filterCriteria,
-              projeto: e,
-            });
-          }}
-          value={filterCriteria.projeto}
-        />
+
         <Spacer size="medium" />
 
         {regionProjectsList?.length > 0 ? (
@@ -232,7 +224,10 @@ function HomeLoggedScreen() {
               place={`${project?.cidade} - ${project?.uf}`}
               description={project.descricao_projeto}
               onPress={() =>
-                handleProjectPress(project?.id_projeto, 'HomeLogged')
+                handleProjectPress({
+                  projectId: project?.id_projeto,
+                  inscrito: project?.inscrito,
+                })
               }
             />
           ))
@@ -250,6 +245,7 @@ function HomeLoggedScreen() {
         onClose={() => setFilterModalVisible(false)}
         onApply={handleApplyFilters}
       />
+      {Platform.OS === 'android' && <Spacer size="extraLarge" />}
     </Container>
   );
 }

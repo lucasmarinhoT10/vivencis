@@ -8,6 +8,7 @@ import {
   Text,
   Modal,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 
 import Spacer from '@components/Spacer';
@@ -52,6 +53,7 @@ interface Projeto {
   pre_requisitos: string[];
   tipo_servico: string;
   valor_total: number;
+  inscrito: 'N' | 'S';
 }
 
 export default function DetailsProjectsScreen(props: any) {
@@ -65,18 +67,12 @@ export default function DetailsProjectsScreen(props: any) {
   const navigation = useNavigation<DetailsProjectsScreenNavigationProp>();
   const getProject = async () => {
     await fetchProjectDetail({
-      id_project: props?.route?.params?.projectId,
+      id_project: props?.route?.params?.id,
       setProject: setData,
       setLoading,
     });
   };
-  const route = useRoute();
-  const homeLogged = route.params;
-  const projects = route.params;
   const [currentPage, setCurrentPage] = useState(1);
-
-  const [routeName] = useState(homeLogged?.screenName);
-
   const debouncedOsSearch = useDebounce(osSearch, 500);
 
   const [modal, setModal] = useState(false);
@@ -95,7 +91,7 @@ export default function DetailsProjectsScreen(props: any) {
       currentPage,
       filter: {
         filter_os: debouncedOsSearch,
-        projeto: props?.route?.params?.projectId,
+        projeto: props?.route?.params?.id,
       },
     });
     if (!osSearch) {
@@ -108,7 +104,7 @@ export default function DetailsProjectsScreen(props: any) {
   }, [currentPage, debouncedOsSearch]);
   const toggleModal = async () => {
     const response = await subscribeProject({
-      setLoading: setLoadingSub,
+      setLoading: () => {},
       id_project: data?.id_projeto ?? 0,
       payload: {
         id_parceiro: user?.id_entidade,
@@ -116,7 +112,8 @@ export default function DetailsProjectsScreen(props: any) {
       },
     });
     if (response?.erro) {
-      alert(response?.erro);
+      Alert.alert('Desculpe, erro ao inscrever', response?.erro);
+      console.log(response);
       setModal((prev) => !prev);
     } else {
       setModal((prev) => !prev);
@@ -133,9 +130,9 @@ export default function DetailsProjectsScreen(props: any) {
   const toggleModalNoCertified = () => {
     setModalNoCertified((prev) => !prev);
   };
-  const handleNavigateToAssignTechnician = (projectId: string) => {
+  const handleNavigateToAssignTechnician = (id: string) => {
     const selectedProject = projectDetailsMock.find(
-      (project) => project.id === projectId
+      (project) => project.id === id
     );
     if (selectedProject) {
       navigation.navigate('AssignTechnician', {
@@ -145,7 +142,7 @@ export default function DetailsProjectsScreen(props: any) {
   };
   useEffect(() => {
     getProject();
-  }, [props?.route?.params?.projectId]);
+  }, [props?.route?.params?.id]);
 
   const handleNextPage = () => {
     if (paginationOrders && currentPage < paginationOrders.paginas) {
@@ -158,7 +155,6 @@ export default function DetailsProjectsScreen(props: any) {
       setCurrentPage((prev) => prev - 1);
     }
   };
-
   return (
     <Container
       scrollEnabled
@@ -184,6 +180,7 @@ export default function DetailsProjectsScreen(props: any) {
               <Typograph variant="title" fontWeight="500" style={styles.title}>
                 Pré-requisitos necessários
               </Typograph>
+              <Spacer size="small" />
               <View>
                 {data?.pre_requisitos.map((certification) => (
                   <View key={certification} style={{ marginBottom: 16 }}>
@@ -254,6 +251,7 @@ export default function DetailsProjectsScreen(props: any) {
                 onChangeText={(text) => setOsSearch(text)}
                 value={osSearch}
               />
+              <Spacer size="large" />
               <Typograph
                 variant="title"
                 textAlign="center"
@@ -298,7 +296,7 @@ export default function DetailsProjectsScreen(props: any) {
               )}
             </>
           )}
-          {typeof routeName === 'string' && routeName === 'HomeLogged' && (
+          {props?.route?.params?.inscrito === 'N' && (
             <Button
               onPress={() => setModal(true)}
               style={{ height: 48, marginBottom: 52 }}
@@ -327,9 +325,11 @@ export default function DetailsProjectsScreen(props: any) {
       <ModalConfirmation
         visible={secondModal}
         hasBottom={true}
-        title={'Inscrição em análise'}
-        subtitle={`Nosso time irá analizar a sua inscrição no ${data?.nome_projeto}. Enquanto isso, leia sobre as boas práticas de como realizar uma OS.`}
+        icon={false}
+        title={'Inscrição concluída'}
+        subtitle={`Parabéns, você agora está inscrito no Projeto ${data?.nome_projeto}.`}
         onClose={toggleSecondModal}
+        okText="Finalizar"
         onConfirm={(date, time, observation) => {
           toggleSecondModal();
           navigation.goBack();

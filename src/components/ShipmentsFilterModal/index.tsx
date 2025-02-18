@@ -15,6 +15,8 @@ import MaskInput from 'react-native-mask-input';
 import useProjectsStore from 'src/store/projectsStore';
 import SelectDrop from '@components/SelectDrop';
 import { formatAndValidateDateInput } from '@utils/normalilze';
+import useUserStore from 'src/store/userStore';
+import { fetchProjects } from '@modules/Auth/screens/Projects/services/project.services';
 
 interface ProjectFilterModalProps {
   visible: boolean;
@@ -34,23 +36,37 @@ const ShipmentsFilterModal: React.FC<ProjectFilterModalProps> = ({
   onApply,
   filters,
 }) => {
-  const { projects } = useProjectsStore();
+  const { user } = useUserStore();
+  const { setProjects, projects } = useProjectsStore();
   const [visiblePro, setVisiblePro] = useState(false);
   const [projeto, setProjeto] = useState<string>();
   const [selectedStatus, setSelectedStatus] = useState<string>();
   const [dataInicio, setDataInicio] = useState<string>('');
   const [dataFim, setDataFim] = useState<string>();
+  const getProjects = async () => {
+    await fetchProjects({
+      setProjects,
+      setLoading: () => {},
+      id_parceiro: user?.id_entidade,
+    });
+  };
   useEffect(() => {
-    setProjeto(
-      projects?.find((it) => it?.id_projeto === filters?.id_projeto)
-        ?.nome_projeto
-    );
-    setSelectedStatus(filters?.status);
-    if (filters?.dataInicio) {
-      setDataInicio(filters?.dataInicio);
+    if (projects?.length) {
+      setProjeto(
+        projects?.find((it) => it?.id_projeto === filters?.id_projeto)
+          ?.nome_projeto
+      );
+      setSelectedStatus(filters?.status);
+      if (filters?.dataInicio) {
+        setDataInicio(filters?.dataInicio);
+      }
+      setDataFim(filters?.dataFim);
     }
-    setDataFim(filters?.dataFim);
-  }, [filters]);
+  }, [filters, projects]);
+
+  useEffect(() => {
+    getProjects();
+  }, []);
   const handleSelectStatus = (item: string) => {
     setSelectedStatus((prev) => (prev === item ? '' : item));
   };

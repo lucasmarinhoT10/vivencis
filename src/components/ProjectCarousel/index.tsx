@@ -31,7 +31,7 @@ const ProjectCarousel: React.FC<CarouselProps> = ({
 }) => {
   const renderItem: ListRenderItem<ProjectData> = ({ item }) => (
     <TouchableOpacity
-      onPress={() => onPress && onPress(item.id_projeto)}
+      onPress={() => onPress && onPress(item)}
       activeOpacity={1}
       style={[
         styles.card,

@@ -74,10 +74,6 @@ export const OSCardInfo: React.FC<ListCardProps> = ({
             {isClient ? (
               <>
                 <View style={styles.item}>
-                  <Text style={styles.label}>Cliente</Text>
-                  <Text style={styles.value}>{data?.cliente ?? '-'}</Text>
-                </View>
-                <View style={styles.item}>
                   <Text style={styles.label}>Data nascimento</Text>
                   <Text style={styles.value}>
                     {data?.dta_nascimento ?? '-'}
@@ -105,15 +101,19 @@ export const OSCardInfo: React.FC<ListCardProps> = ({
                 </View>
                 <View style={styles.item}>
                   <Text style={styles.label}>Telefone</Text>
-                  <Text style={styles.value}>{data?.telefone ?? '-'}</Text>
+                  <Text style={styles.value}>
+                    {data?.telefone === '' || !data?.telefone
+                      ? '-'
+                      : data?.telefone}
+                  </Text>
                 </View>
                 <View style={styles.item}>
                   <Text style={styles.label}>Celular</Text>
-                  <Text style={styles.value}>{data?.celular ?? '-'}</Text>
-                </View>
-                <View style={styles.item}>
-                  <Text style={styles.label}>Email</Text>
-                  <Text style={styles.value}>{data?.email ?? '-'}</Text>
+                  <Text style={styles.value}>
+                    {data?.celular === '' || !data?.celular
+                      ? '-'
+                      : data?.celular}
+                  </Text>
                 </View>
                 <View style={styles.item}>
                   <Text style={styles.label}>Ponto de referência</Text>
@@ -124,7 +124,7 @@ export const OSCardInfo: React.FC<ListCardProps> = ({
                     { color: theme.colors.primary.labelValue },
                   ]}
                 >
-                  {data?.referencia ?? '-'}
+                  {data?.ponto_referencia ?? '-'}
                 </Text>
               </>
             ) : (
@@ -155,16 +155,6 @@ export const OSCardInfo: React.FC<ListCardProps> = ({
                   <Text style={styles.label}>Tipo</Text>
                   <Text style={styles.value}>{data?.tipo ?? '-'}</Text>
                 </View>
-
-                <View style={styles.item}>
-                  <Text style={styles.label}>Origem</Text>
-                  <Text style={styles.value}>{data?.origem ?? '-'}</Text>
-                </View>
-                <View style={styles.item}>
-                  <Text style={styles.label}>Valor total a ser pago</Text>
-                  <Text style={styles.value}>{data?.valor ?? '-'}</Text>
-                </View>
-
                 <View style={styles.item}>
                   <Text style={styles.label}>Técnico</Text>
                   <Text style={styles.value}>{data?.nome_tecnico}</Text>
@@ -184,12 +174,13 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 4,
-    elevation: 2,
+    elevation: 3,
+    backgroundColor: theme.colors.background,
+    borderRadius: 8,
   },
   card: {
     backgroundColor: theme.colors.primary.contrastText,
     padding: 16,
-    marginBottom: 16,
   },
   header: {
     flexDirection: 'row',

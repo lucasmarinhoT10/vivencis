@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Container from '@components/Container';
 import { Alert, StyleSheet, View } from 'react-native';
 import { theme } from '@theme/theme';
@@ -12,6 +12,11 @@ import ImageUploader from '@components/ImageUploader';
 import Typograph from '@components/Typograph';
 import DownloadFile from '@components/DownloadFile';
 import { useNavigation } from '@react-navigation/native';
+import {
+  fetchCorrectProducts,
+  fetchProducts,
+} from '../services/project.services';
+import { Roles } from '../OSClose';
 
 type DetailsProjectsScreenNavigationProp =
   BottomTabNavigationProp<RootDrawerParamList>;
@@ -28,7 +33,8 @@ export default function OSCorrection(props: any) {
     string | null
   >(null);
   const [fileName, setFileName] = useState('documento.pdf');
-
+  const [products, setProducts] = useState<any[]>([]);
+  const [roles, setRoles] = useState<Roles>();
   const handleDelete = (type: 'antenna' | 'installation' | 'signature') => {
     Alert.alert('Deletado', 'O arquivo foi removido.');
 
@@ -38,6 +44,17 @@ export default function OSCorrection(props: any) {
   };
   const navigation = useNavigation();
 
+  useEffect(() => {
+    const getProdutos = async () =>
+      await fetchCorrectProducts({
+        setLoading: () => {},
+        id_project: data?.id_projeto,
+        id_os: data?.id_os,
+        setProducts,
+        setRoles,
+      });
+    getProdutos();
+  }, [data?.id_projeto, data?.id_os]);
   return (
     <Container scrollEnabled title={`Correção OS ${data?.id_os} `} hasGoBack>
       <View style={styles.content}>

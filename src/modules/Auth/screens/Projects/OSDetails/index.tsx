@@ -19,35 +19,36 @@ type DetailsProjectsScreenNavigationProp =
 export default function OSDetails(props: any) {
   const [data, setData] = useState(props.route.params);
   const { user } = useUserStore();
-  const { register } = useRegisterStore();
-  const cpfRegistrado = register?.responsavel_cpf;
+  const cpfRegistrado = data?.cpf;
   const navigation = useNavigation<DetailsProjectsScreenNavigationProp>();
   const [isOpenModalConfirmation, setIsOpenModalConfirmation] = useState(false);
   const [status, setStatus] = useState('');
   const [CPFValidation, setCPFValidation] = useState('');
+
   const getStatusData = async () => {
     const status = await getStatus({
       id_parceiro: user?.id_entidade,
     });
     setStatus(status?.status_analise);
   };
+
   useEffect(() => {
     getStatusData();
   }, []);
   return (
     <Container
       scrollEnabled
-      title={`OS ${data?.id_os}`}
+      title={`OS ${data?.numero_os}`}
       hasGoBack
       spacerVertical="small"
     >
       <View
         style={{
           padding: 12,
-          backgroundColor: theme.colors.primary.main,
-          // data?.status === 'CORRIGIR INSTALAÇÃO'
-          //   ? theme.colors.error.main
-          //   : theme.colors.primary.main,
+          backgroundColor:
+            data?.status === 'CORRIGIR INSTALAÇÃO'
+              ? theme.colors.error.main
+              : theme.colors.primary.main,
           marginBottom: 12,
           borderRadius: 4,
         }}
@@ -62,7 +63,10 @@ export default function OSDetails(props: any) {
         </Text>
       </View>
       <OSCardInfo title={'Informações básicas'} data={data} />
+      <Spacer size="large" />
       <OSCardInfo title={'Dados do cliente'} data={data} isClient />
+      <Spacer size="large" />
+
       <Button
         variant="secondary"
         text="Manual de preenchimento"
@@ -73,10 +77,9 @@ export default function OSDetails(props: any) {
       <Button
         variant="quaternary"
         text={
-          'Executar ordem de serviço'
-          // data?.status === 'CORRIGIR INSTALAÇÃO'
-          //   ? 'Correção OS'
-          //   : 'Executar ordem de serviço'
+          data?.status === 'CORRIGIR INSTALAÇÃO'
+            ? 'Correção OS'
+            : 'Executar ordem de serviço'
         }
         style={{ height: 48 }}
         onPress={() => {
@@ -145,12 +148,11 @@ export default function OSDetails(props: any) {
                     cpfRegistrado &&
                     CPFValidation === cpfRegistrado.substring(0, 4)
                   ) {
-                    navigation.navigate('OSClose' as never, data);
-                    // if (data?.status === 'CORRIGIR INSTALAÇÃO') {
-                    //   navigation.navigate('OSCorrection' as never, data);
-                    // } else {
-                    //   navigation.navigate('OSClose' as never, data);
-                    // }
+                    if (data?.status === 'CORRIGIR INSTALAÇÃO') {
+                      navigation.navigate('OSCorrection' as never, data);
+                    } else {
+                      navigation.navigate('OSClose' as never, data);
+                    }
                     setIsOpenModalConfirmation(false);
                   } else {
                     Alert.alert(

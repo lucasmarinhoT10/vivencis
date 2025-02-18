@@ -93,35 +93,33 @@ const ProjectFilterModal: React.FC<ProjectFilterModalProps> = ({
               <TouchableOpacity
                 style={[
                   styles.optionButton,
-                  selectedStatus === 'PENDENTE' && styles.optionButtonSelected,
+                  selectedStatus === 'ATIVO' && styles.optionButtonSelected,
                 ]}
-                onPress={() => handleSelectStatus('PENDENTE')}
+                onPress={() => handleSelectStatus('ATIVO')}
               >
                 <Text
                   style={[
                     styles.optionText,
-                    selectedStatus === 'PENDENTE' && styles.optionTextSelected,
+                    selectedStatus === 'ATIVO' && styles.optionTextSelected,
                   ]}
                 >
-                  PENDENTE
+                  Ativo
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[
                   styles.optionButton,
-                  selectedStatus === 'FINALIZADO' &&
-                    styles.optionButtonSelected,
+                  selectedStatus === 'INATIVO' && styles.optionButtonSelected,
                 ]}
-                onPress={() => handleSelectStatus('FINALIZADO')}
+                onPress={() => handleSelectStatus('INATIVO')}
               >
                 <Text
                   style={[
                     styles.optionText,
-                    selectedStatus === 'FINALIZADO' &&
-                      styles.optionTextSelected,
+                    selectedStatus === 'INATIVO' && styles.optionTextSelected,
                   ]}
                 >
-                  FINALIZADO
+                  Inativo
                 </Text>
               </TouchableOpacity>
             </View>

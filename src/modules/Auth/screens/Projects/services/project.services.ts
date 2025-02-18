@@ -9,6 +9,7 @@ interface ProjectProps {
   setProjects: (projects: ProjectData[]) => void;
   setLoading: (loading: boolean) => void;
   filters?: any;
+  projeto?: string;
 }
 interface OrderProps {
   id_parceiro?: number;
@@ -55,10 +56,11 @@ export async function fetchProjects({
   setProjects,
   setLoading,
   filters,
+  projeto
 }: ProjectProps): Promise<any> {
   try {
     setLoading(true);
-    let url = `/wfmb2bapp/v2/projetos/lista?uf=${encodeURIComponent(UF)}&cidade=${encodeURIComponent(cidade)}`;
+    let url = `/wfmb2bapp/v2/projetos/lista?uf=${encodeURIComponent(UF)}&cidade=${encodeURIComponent(cidade)}&inscrito=S`;
     if (id_parceiro) {
       url += `&id_parceiro=${encodeURIComponent(id_parceiro)}`;
     }
@@ -75,9 +77,9 @@ export async function fetchProjects({
       if (filters.data) {
         url += `&filter_data_agendamento=${encodeURIComponent(filters.data)}`;
       }
-      if (filters.projeto) {
-        url += `&filter_projeto=${encodeURIComponent(filters.projeto)}`;
-      }
+    }
+    if (projeto) {
+      url += `&filter_projeto=${encodeURIComponent(projeto)}`;
     }
 
     const { data } = await api.get<responseProjectsData>(url);
@@ -229,6 +231,32 @@ export async function fetchProducts({
     setLoading(true);
     const { data } = await api.get<any>(
       `/wfmb2bapp/v2/parceiros/os/projeto/${id_project}/${id_os}`
+    );
+    if (data) {
+      setProducts(data.grupos);
+      setRoles(data);
+      setLoading(false);
+    } else {
+      setProducts({});
+      setLoading(false);
+    }
+  } catch (error) {
+    setLoading(false);
+    console.error('projects error', error);
+  }
+}
+
+export async function fetchCorrectProducts({
+  id_project,
+  id_os,
+  setProducts,
+  setLoading,
+  setRoles,
+}: ProductsProps): Promise<any> {
+  try {
+    setLoading(true);
+    const { data } = await api.get<any>(
+      `/wfmb2bapp/v2/parceiros/os/correcao/${id_project}/${id_os}`
     );
     if (data) {
       setProducts(data.grupos);

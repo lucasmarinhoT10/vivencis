@@ -18,17 +18,32 @@ import useUserStore from 'src/store/userStore';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { RootDrawerParamList } from '@routes/routes';
 import SuportIcon from '@assets/svgs/Suport';
+import useOrdersStore from 'src/store/ordersStore';
+import useProjectsStore from 'src/store/projectsStore';
+import useShipmentsStore from 'src/store/shipmentsStore';
+import useLocationStore from 'src/store/useLocationStore';
+import useTechniciansStore from 'src/store/techniciansStore';
 
 type ProfileScreenNavigationProp = BottomTabNavigationProp<RootDrawerParamList>;
 
 export default function ProfileScreen() {
   const { logoutUser } = useAuthStore();
   const { removeUser } = useUserStore();
+  const { setOrders } = useOrdersStore();
+  const { setProjects } = useProjectsStore();
+  const { setShipments } = useShipmentsStore();
+  const { setLocation } = useLocationStore();
+  const { setTechnicians } = useTechniciansStore();
   const navigation = useNavigation<ProfileScreenNavigationProp>();
   const handleLogout = async () => {
     try {
       await logoutUser();
       await removeUser();
+      setOrders(null);
+      setProjects(null);
+      setShipments(null);
+      setLocation(null);
+      setTechnicians(null);
       navigation.reset({
         index: 0,
         routes: [{ name: 'SignIn' as never }],

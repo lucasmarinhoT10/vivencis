@@ -41,6 +41,14 @@ export const ModalConfirmation: React.FC<ModalConfirmationProps> = ({
     <Modal transparent={true} visible={visible} animationType="fade">
       <View style={!hasBottom ? styles.modalBackground : styles.hasBottom}>
         <View style={styles.modalContainer}>
+          <TouchableOpacity onPress={onClose}>
+            <AntDesign
+              name="close"
+              size={18}
+              style={styles.close}
+              color="black"
+            />
+          </TouchableOpacity>
           <View style={styles.rowTitle}>
             <View style={styles.title}>
               {icon && (
@@ -52,14 +60,6 @@ export const ModalConfirmation: React.FC<ModalConfirmationProps> = ({
               )}
               <Text style={styles.title}>{title}</Text>
             </View>
-            <TouchableOpacity onPress={onClose}>
-              <AntDesign
-                name="close"
-                size={18}
-                style={styles.close}
-                color="black"
-              />
-            </TouchableOpacity>
           </View>
           <Text style={styles.subtitle}>{subtitle}</Text>
 
@@ -171,7 +171,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
 
-  close: { position: 'absolute', top: 0, right: -40, zIndex: 10 },
+  close: { position: 'absolute', top: 0, right: 10, zIndex: 10 },
 
   subtitle: {
     fontSize: 16,

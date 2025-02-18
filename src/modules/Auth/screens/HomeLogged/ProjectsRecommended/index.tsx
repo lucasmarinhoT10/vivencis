@@ -54,8 +54,17 @@ export default function ProjectsRecommendedScreen() {
 
   const navigation = useNavigation<ProjectsScreenNavigationProp>();
   const { user } = useUserStore();
-  const handleProjectPress = (projectId: number) => {
-    navigation.navigate('DetailsProjects' as never, { projectId });
+  const handleProjectPress = ({
+    projectId,
+    inscrito,
+  }: {
+    projectId: number;
+    inscrito: string;
+  }) => {
+    navigation.navigate('DetailsProjects' as never, {
+      id: projectId,
+      inscrito: inscrito,
+    });
   };
   const [address, setAddress] = useState<{ uf: string; cidade: string }>({
     uf: '',
@@ -80,6 +89,7 @@ export default function ProjectsRecommendedScreen() {
       cidade: cidade,
       setProjects: setRegionProjectsList,
       setLoading: setLoadingRegion,
+      id_parceiro: user?.id_entidade,
       filters,
     });
   };
@@ -189,7 +199,12 @@ export default function ProjectsRecommendedScreen() {
                 startDate={project.data_execucao}
                 endDate={project.data_limite_execucao}
                 description={project.descricao_projeto}
-                onPress={() => handleProjectPress(project.id_projeto)}
+                onPress={() =>
+                  handleProjectPress({
+                    projectId: project?.id_projeto,
+                    inscrito: project?.inscrito,
+                  })
+                }
               />
             ))
           ) : (
